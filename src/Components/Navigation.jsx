@@ -7,7 +7,7 @@ import {
   Avatar,
   Button
 } from '@chakra-ui/react'
-import { SettingsIcon, AddIcon, HamburgerIcon } from '@chakra-ui/icons'
+import { SettingsIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
 
 const Navigation = () => (
   <List
@@ -69,7 +69,7 @@ const Navigation = () => (
       fontWeight="bold"
       opacity={1}
       colorScheme="red"
-      leftIcon={<HamburgerIcon />}
+      leftIcon={<ViewIcon/>}
       display="flex"
       justifyContent="center"
       height={16}
@@ -78,7 +78,7 @@ const Navigation = () => (
       mt={1}
       alignItems="center"
     >
-      Dashboard
+     Participants
     </Button>
     <Button
       variant="link"
@@ -90,7 +90,7 @@ const Navigation = () => (
       fontWeight="bold"
       opacity={1}
       colorScheme="red"
-      leftIcon={<HamburgerIcon />}
+      leftIcon={<ViewIcon />}
       display="flex"
       justifyContent="center"
       height={16}
@@ -99,7 +99,7 @@ const Navigation = () => (
       mt={1}
       alignItems="center"
     >
-      Dashboard
+      Judges
     </Button>
     <IconButton
       aria-label="icon"
