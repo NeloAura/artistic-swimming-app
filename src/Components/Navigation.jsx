@@ -101,6 +101,27 @@ const Navigation = () => (
     >
       Judges
     </Button>
+    <Button
+      variant="link"
+      size="md"
+      ml={3}
+      mr={3}
+      backgroundColor="red.500"
+      color="whiteAlpha.900"
+      fontWeight="bold"
+      opacity={1}
+      colorScheme="red"
+      leftIcon={<ViewIcon />}
+      display="flex"
+      justifyContent="center"
+      height={16}
+      textAlign="center"
+      width={40}
+      mt={1}
+      alignItems="center"
+    >
+      Clubs
+    </Button>
     <IconButton
       aria-label="icon"
       icon={<SettingsIcon />}
@@ -117,6 +138,7 @@ const Navigation = () => (
       border={2}
       mb={3}
     />
+    
     <Avatar
       size="md"
       showBorder
