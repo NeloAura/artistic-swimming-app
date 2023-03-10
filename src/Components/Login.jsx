@@ -10,7 +10,7 @@ import {
   IconButton
 } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
-
+import adminAvatar from '../assets/images/BBS.jpg'
 const LoginComp = () => (
   <ChakraProvider resetCSS>
     
@@ -44,7 +44,10 @@ const LoginComp = () => (
         alignItems="center"
         mb={8}
         showBorder
-      />
+        src={adminAvatar}
+      >
+        
+    </Avatar>
       <InputGroup>
         <InputLeftAddon backgroundColor="red.400">User</InputLeftAddon>
         <Input />

@@ -5,6 +5,7 @@ import {
   IconButton,
   Box,
   Avatar,
+  AvatarBadge,
   Button
 } from '@chakra-ui/react'
 import { SettingsIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
@@ -147,7 +148,11 @@ const Navigation = () => (
       alignItems="center"
       flexDirection="row"
       mt={3}
-    />
+      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRruTfnpNKs0px2RjVrmJy9T0srVXoUg76e8g&usqp=CAU"
+      >
+      
+    <AvatarBadge bg="green.500" boxSize="1.25rem" borderColor="white" />
+    </Avatar>
   </List>
 )
 
