@@ -14,7 +14,7 @@ const Navigation = () => (
   <List
     styleType="square"
     display="flex"
-    backgroundColor="twitter.400"
+    backgroundColor="twitter.300"
     overflow="visible"
     justifyContent="space-around"
     minHeight={75}

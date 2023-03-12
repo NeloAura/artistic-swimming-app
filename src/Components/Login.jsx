@@ -19,7 +19,7 @@ const LoginComp = () => (
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      backgroundColor="linkedin.400"
+      backgroundColor="twitter.300"
       p={10}
       mt={10}
       mb={10}
