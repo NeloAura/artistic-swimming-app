@@ -1,5 +1,5 @@
 {
-  "main": "public/electron.js",
+  "main": "public/main.js",
   "homepage": "./",
   "name": "artistic-swimming-desktop",
   "version": "0.1.0",
@@ -18,16 +18,40 @@
     "@chakra-ui/theme": "^2.1.11",
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
-    "framer-motion": "7.3.0"
+    "framer-motion": "7.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "nodemon": "^1.19.1",
+    "piping": "^1.0.0-rc.4",
+    "electron-is-dev": "^2.0.0"
     
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "concurrently \"npm run react-start\" \"npm run server-start\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
+    "react-build": "react-scripts build",
+    "server-build": "babel server --out-dir build-server",
+    "server-start": "nodemon --watch server --exec babel-node src/server/server.mjs",
+    "react-start": " cross-env BROWSER=none react-scripts start",
     "test": "react-scripts test",
+    "electron-dev":"node src/scripts/dev.js src/scripts/start.js",
     "eject": "react-scripts eject",
-    "dev": "concurrently --kill-others \"cross-env BROWSER=none npm start\" \"npm:electron\"",
-    "electron": "wait-on http://localhost:3000 && electron ."
+    "dev": "concurrently --kill-others \"npm:electron-dev\" \"cross-env BROWSER=none npm start\" ",
+    "electron": "wait-on http://localhost:3000 && electron .",
+    "electron-pack": "electron-builder -c.extraMetadata.main='./main.js'",
+    "preelectron-pack": "npm run react-build && npm run server-build"
+  },
+  
+  "build": {
+    "appId": "com.electron-boilerplate",
+    "files": [
+      "build/**/**/*",
+      "build-server/**/**/*",
+      "node_modules/**/*",
+      "./main.js"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -50,10 +74,16 @@
   "devDependencies": {
     "concurrently": "^7.6.0",
     "electron": "^23.1.3",
-    "electron-is-dev": "^2.0.0",
+    "react-app-rewired": "^2.1.3",
+    "customize-cra": "^0.2.12",
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/node": "^7.4.5",
+    "@babel/preset-env": "^7.4.4",
     "wait-on": "^7.0.1",
     "typescript": "3.3.3",
     "@types/react": "^18.0.18",
-    "@types/react-dom": "^18.0.0"
+    "@types/react-dom": "^18.0.0",
+    "electron-builder": "^20.41.0"
   }
 }
