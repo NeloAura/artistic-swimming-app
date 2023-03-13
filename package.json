@@ -35,7 +35,7 @@
     "test": "react-scripts test",
     "electron-dev":"node src/scripts/dev.js src/scripts/start.js",
     "eject": "react-scripts eject",
-    "dev": "concurrently --kill-others \"npm:electron-dev\" \"cross-env BROWSER=none npm start\" ",
+    "dev": "concurrently --kill-others \"cross-env BROWSER=none npm start\" \"npm:electron-dev\"",
     "electron": "wait-on http://localhost:3000 && electron .",
     "electron-pack": "electron-builder -c.extraMetadata.main='./main.js'",
     "preelectron-pack": "npm run react-build && npm run server-build"
