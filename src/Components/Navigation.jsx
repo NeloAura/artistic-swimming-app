@@ -6,9 +6,61 @@ import {
   Box,
   Avatar,
   AvatarBadge,
-  Button
+  Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  ButtonGroup
 } from '@chakra-ui/react'
 import { SettingsIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
+
+
+function WalkthroughPopover(button) {
+  const initialFocusRef = React.useRef()
+  return (
+    <Popover
+      initialFocusRef={initialFocusRef}
+      placement='bottom'
+      closeOnBlur={false}
+    >
+      <PopoverTrigger>
+        {button}
+      </PopoverTrigger>
+      <PopoverContent color='white' bg='blue.800' borderColor='twiter.300'>
+        <PopoverHeader pt={4} fontWeight='bold' border='0'>
+          Add
+        </PopoverHeader>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverBody>
+          Click the desired button with descripton to add
+        </PopoverBody>
+        <PopoverFooter
+          border='0'
+          display='flex'
+          alignItems='center'
+          justifyContent='space-between'
+          pb={4}
+        >
+          
+          <ButtonGroup size='sm'>
+            <Button colorScheme='green'>Participant</Button>
+            <Button colorScheme='purple' ref={initialFocusRef}>
+              Judge
+            </Button>
+            <Button colorScheme='blue'>Club</Button>
+          </ButtonGroup>
+        </PopoverFooter>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 
 const Navigation = () => (
   <List
@@ -22,7 +74,7 @@ const Navigation = () => (
     alignItems="stretch"
     flexDirection="row"
   >
-    <IconButton
+    {WalkthroughPopover(<IconButton
       aria-label="icon"
       icon={<AddIcon />}
       size="lg"
@@ -38,7 +90,8 @@ const Navigation = () => (
       borderRadius={45}
       mb={3}
       alignItems="center"
-    />
+    />)}
+    
     <Button
       variant="link"
       size="md"
