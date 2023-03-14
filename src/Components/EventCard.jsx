@@ -13,55 +13,57 @@ import {
   Button,
   Box,
   IconButton,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  ButtonGroup
 } from '@chakra-ui/react'
 
 import { ViewIcon,EditIcon, DeleteIcon, DownloadIcon } from '@chakra-ui/icons'
 import EventImage from '../assets/images/event.png'
 
 
-function AlertDialogExample() {
-  const { isOpen, onOpen, onClose } = React.useDisclosure()
-  const cancelRef = React.useRef()
 
+function DeletePopover(button) {
+  const initialFocusRef = React.useRef()
+  
   return (
-    <>
-      <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />} onClick={onOpen}>
-        Delete 
-      </Button>
-
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
-              Delete Event
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              Are you sure? You can't undo this action afterwards.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button colorScheme='red' onClick={onClose} ml={3}>
-                Delete
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </>
+    <Popover
+      initialFocusRef={initialFocusRef}
+      placement='bottom'
+      closeOnBlur={false}
+    >
+      <PopoverTrigger>
+        {button}
+      </PopoverTrigger>
+      <PopoverContent color='white' bg='blue.800' borderColor='twiter.300'>
+        <PopoverHeader pt={4} fontWeight='bold' border='0'>
+          Alert !!
+        </PopoverHeader>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverBody>
+        Are you sure you want to delete? You can't undo this action afterwards.
+        </PopoverBody>
+        <PopoverFooter
+          border='0'
+          display='flex'
+          alignItems='center'
+          justifyContent='space-between'
+          pb={4}
+        >
+          
+          <ButtonGroup size='md'>
+            <Button colorScheme='red'>Delete</Button>
+          </ButtonGroup>
+        </PopoverFooter>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -124,9 +126,8 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
-    {/* Trying to call the AlertDialogExample function to render the button and display alert popover , but somehow the page renders blank , Hellp!! */}
-  {/*--->*/}<Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>
-     {/* {AlertDialogExample()} */}
+    {DeletePopover(
+    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />} >Delete</Button>)}
   </CardFooter>
 </Card>
 
@@ -185,9 +186,8 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
-    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>
-      Delete
-    </Button>
+    {DeletePopover(
+    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>)}
   </CardFooter>
 </Card>
 <Card maxW='lg' bg='twitter.300' margin={1}>
@@ -245,9 +245,8 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
-    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>
-      Delete
-    </Button>
+    {DeletePopover(
+    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>)}
   </CardFooter>
 </Card>
 <Card maxW='lg' bg='twitter.300' margin={1}>
@@ -305,9 +304,8 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
-    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>
-      Delete
-    </Button>
+    {DeletePopover(
+    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>)}
   </CardFooter>
 </Card>
 <Card maxW='lg' bg='twitter.300' margin={1}>
