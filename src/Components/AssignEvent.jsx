@@ -5,12 +5,14 @@ import {
   Switch,
   Container,
   List,
+  SimpleGrid,
   IconButton
 } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
 
 const AssignEventComp = () => (
   <ChakraProvider resetCSS>
+    <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(650px, 1fr))' alignContents={'center'}>
     <Container
       backgroundColor="twitter.300"
       pb={2}
@@ -210,6 +212,7 @@ const AssignEventComp = () => (
         alignItems="center"
       />
     </Container>
+    </SimpleGrid>
   </ChakraProvider>
 )
 

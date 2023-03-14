@@ -6,7 +6,7 @@ import Navigation from './Components/Navigation';
 import LoginComp from './Components/Login';
 import GradeComp from './Components/Grade';
 import AssignEventComp from './Components/AssignEvent';
-
+import EventCard from './Components/EventCard';
 function App() {
   return (
     <ChakraProvider>
@@ -19,7 +19,7 @@ function App() {
     <LoginComp/>
     <GradeComp/>
     <AssignEventComp/>
-     
+    <EventCard/>
     
     </ChakraProvider>
   )
