@@ -12,11 +12,60 @@ import {
   Text,
   Button,
   Box,
-  IconButton
+  IconButton,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay
 } from '@chakra-ui/react'
 
 import { ViewIcon,EditIcon, DeleteIcon, DownloadIcon } from '@chakra-ui/icons'
 import EventImage from '../assets/images/event.png'
+
+
+function AlertDialogExample() {
+  const { isOpen, onOpen, onClose } = React.useDisclosure()
+  const cancelRef = React.useRef()
+
+  return (
+    <>
+      <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />} onClick={onOpen}>
+        Delete 
+      </Button>
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Delete Event
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure? You can't undo this action afterwards.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button colorScheme='red' onClick={onClose} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </>
+  )
+}
+
+
 const EventCard = () => (
   <ChakraProvider resetCSS>
     <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(400px, 1fr))'>
@@ -75,9 +124,9 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
-    <Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>
-      Delete
-    </Button>
+    {/* Trying to call the AlertDialogExample function to render the button and display alert popover , but somehow the page renders blank , Hellp!! */}
+  {/*--->*/}<Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>
+     {/* {AlertDialogExample()} */}
   </CardFooter>
 </Card>
 
