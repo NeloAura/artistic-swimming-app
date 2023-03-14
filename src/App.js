@@ -5,6 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import Navigation from './Components/Navigation';   
 import LoginComp from './Components/Login';
 import GradeComp from './Components/Grade';
+import AssignEventComp from './Components/AssignEvent';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
      
     <LoginComp/>
     <GradeComp/>
+    <AssignEventComp/>
      
     
     </ChakraProvider>
