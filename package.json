@@ -19,6 +19,7 @@
     "electron-is-dev": "^2.0.0",
     "express": "^4.17.1",
     "framer-motion": "7.3.0",
+    "node-hotspot": "^0.1.7",
     "nodemon": "^1.19.1",
     "piping": "^1.0.0-rc.4",
     "react": "^18.2.0",
