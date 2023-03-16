@@ -2,14 +2,14 @@
 import http from 'http';
 import express from 'express';
 import cors from 'cors';
-import {execSync} from 'child_process'
-// import hotspot from  'node-hotspot'
+import {exec} from 'child_process'
+import hotspot from  'node-hotspot'
 
 //constants here
 const Api = express();
 const HTTP = http.Server(Api);
-const command = '"C:\\Program Files (x86)\\Treexy\\Omnify Hotspot\\OmnifyHotspot.exe"';
-const args = ['start', 'Artistic Swimming', 'notinpan10'];
+// const command = '"C:\\Program Files (x86)\\Treexy\\Omnify Hotspot\\OmnifyHotspot.exe"';
+// const args = ['start', 'Artistic Swimming', 'notinpan10'];
 
 // const hotspot = new hotspot();
 // const opts = {
@@ -27,16 +27,25 @@ Api.get('/test', (req, res) => res.status(200).send('success!'));
 
 
 
-try {
-  const output = execSync(`${command} ${args.join(' ')}`);
-  console.log(output.toString());
-} catch (error) {
-  console.error(error.toString());
-}
 
-HTTP.listen(9001, () => {
-    console.log('listening on *:9001');
+
+exec('netsh wlan set hostednetwork mode=allow ssid=Artistic key=notinpan10', (error, stdout, stderr) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+    return;
+  }
+
+  // The command executed successfully, so we can now start the hosted network
+  exec('netsh wlan start hostednetwork', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+  });
 });
+
 
 // hotspot.enable(opts)
 //     .then(function() {
