@@ -124,9 +124,10 @@ const EventCard = () => (
     <Button flex='1' variant='ghost' leftIcon={<EditIcon />}>
       Edit
     </Button>
+    {/* {AlertDialogExample()} */}
     {/* Trying to call the AlertDialogExample function to render the button and display alert popover , but somehow the page renders blank , Hellp!! */}
-  {/*--->*/}<Button flex='1' variant='ghost' leftIcon={<DeleteIcon />}>Delete</Button>
-     {/* {AlertDialogExample()} */}
+  <Button flex='1' variant='ghost'  leftIcon={<DeleteIcon />}>Delete</Button>
+     
   </CardFooter>
 </Card>
 
