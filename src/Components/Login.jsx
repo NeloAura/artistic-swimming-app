@@ -7,11 +7,18 @@ import {
   Input,
   Avatar,
   Text,
-  IconButton
+  IconButton,
+  
 } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
 import adminAvatar from '../assets/images/BBS.jpg'
+
+
+
 const LoginComp = () => (
+
+
+  
   <ChakraProvider resetCSS>
     
     <Container
@@ -72,9 +79,16 @@ const LoginComp = () => (
         opacity={0.87}
         bgGradient="linear(to bottom right, red.500,red.300)"
       />
+      
     </Container>
     
+   
+   
+
+     
   </ChakraProvider>
+ 
+   
 )
 
 export default LoginComp
