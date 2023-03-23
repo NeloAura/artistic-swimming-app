@@ -1,6 +1,9 @@
+<<<<<<< HEAD
+=======
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+>>>>>>> 8aa3560e3b39f856343232ba7831dbffda145743
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,6 +13,106 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+<<<<<<< HEAD
+model Club {
+  idClub       Int           @id @default(autoincrement())
+  Name         String?
+  CellPhone    String?
+  Email        String?
+  Participants Participant[]
+}
+
+model Competition {
+  idcompetition               Int                           @id @default(autoincrement())
+  Name                        String                        @unique
+  Participants                Participant[]
+  Competition_has_User        Competition_has_User[]
+  Participant_has_Competition Participant_has_Competition[]
+}
+
+model Competition_has_User {
+  Competition_idcompetition Int
+  User_iduser               Int
+  Competition               Competition @relation(fields: [Competition_idcompetition], references: [idcompetition])
+  User                      User        @relation(fields: [User_iduser], references: [iduser])
+
+  @@id([Competition_idcompetition, User_iduser])
+}
+
+model Event {
+  idEvent               Int                     @id @default(autoincrement())
+  Event                 String                  @unique
+  Event_has_Participant Event_has_Participant[]
+}
+
+model Event_has_Participant {
+  Event_idEvent             Int
+  Participant_idParticipant Int
+  Event                     Event       @relation(fields: [Event_idEvent], references: [idEvent])
+  Participant               Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
+
+  @@id([Event_idEvent, Participant_idParticipant])
+}
+
+model Participant {
+  idParticipant               Int                           @id @default(autoincrement())
+  LastName                    String?
+  FirstName                   String?
+  BirthYear                   String?
+  Division                    String?
+  Age_Category                String?
+  Country                     String?
+  GeneratedNumber             Int?
+  Club                        Club                          @relation(fields: [Club_idClub], references: [idClub])
+  Club_idClub                 Int
+  Competitions                Competition[]
+  Scores                      Score[]
+  Event_has_Participant       Event_has_Participant[]
+  Participant_has_Competition Participant_has_Competition[]
+
+  @@unique([idParticipant, Club_idClub])
+}
+
+model Participant_has_Competition {
+  Participant_idParticipant Int
+  Competition_idcompetition Int
+  Participant               Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
+  Competition               Competition @relation(fields: [Competition_idcompetition], references: [idcompetition])
+
+  @@id([Participant_idParticipant, Competition_idcompetition])
+}
+
+model Score {
+  idScore                   Int              @id @default(autoincrement())
+  Execution                 Float?
+  Difficulty                Float?
+  ArtisticExpression        Float?
+  Total                     Float?
+  Participant               Participant      @relation(fields: [Participant_idParticipant, Club_idClub], references: [idParticipant, Club_idClub])
+  Participant_idParticipant Int
+  Club_idClub               Int
+  User_has_Score            User_has_Score[]
+}
+
+model User {
+  iduser               Int                    @id @default(autoincrement())
+  Name                 String
+  Username             String?
+  Password             String?
+  Role                 String?
+  User_has_Score       User_has_Score[]
+  Competition_has_User Competition_has_User[]
+}
+
+model User_has_Score {
+  User_iduser   Int
+  Score_idScore Int
+  User          User  @relation(fields: [User_iduser], references: [iduser])
+  Score         Score @relation(fields: [Score_idScore], references: [idScore])
+
+  @@id([User_iduser, Score_idScore])
+}
+=======
 // model Competition{
   
 // }
@@ -37,3 +140,4 @@ datasource db {
 // model Event{
 
 // }
+>>>>>>> 8aa3560e3b39f856343232ba7831dbffda145743
