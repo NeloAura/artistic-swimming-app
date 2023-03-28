@@ -10,18 +10,6 @@ import hotspot from 'node-hotspot'
 const Api = express();
 const HTTP = http.Server(Api);
 
-
-// const command = '"C:\\Program Files (x86)\\Treexy\\Omnify Hotspot\\OmnifyHotspot.exe"';
-// const args = ['start', 'Artistic Swimming', 'notinpan10'];
-
-// const hotspot = new hotspot();
-// const opts = {
-//     ssid: 'Artistic Swimming ', 
-//     password: 'notinpan10', 
-//     force: true, // (optional)  if hosting a network already turn it off and run ours.
-//     //adaptor: 'Ethernet'  (optional / false) name of adaptor to have ICS (Internet Connection Sharing) share internet from, passing false disables ICS all together - if non givin node-hotspot will attempt to find currently connected adaptor automatically
-// };
- 
 //execution here
 
 Api.use(cors());
@@ -32,26 +20,6 @@ HTTP.listen(3001, () => {
   console.log('listening on *:3001');
   
 });
-
-
-
-// exec('netsh wlan set hostednetwork mode=allow ssid=Artistic key=notinpan10', (error, stdout, stderr) => {
-//   if (error) {
-//     console.error(`exec error: ${error}`);
-//     return;
-//   }
-
-//   // The command executed successfully, so we can now start the hosted network
-//   exec('netsh wlan start hostednetwork', (error, stdout, stderr) => {
-//     if (error) {
-//       console.error(`exec error: ${error}`);
-//       return;
-//     }
-//     console.log(`stdout: ${stdout}`);
-//     console.error(`stderr: ${stderr}`);
-//   });
-// });
-
 
 
 const options = {
