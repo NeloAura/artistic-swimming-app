@@ -14,12 +14,9 @@ import { QRCodeGenerator } from './Components/QRCodeGenerator';
 function App() {
   return (
     <ChakraProvider>
-    
-
-      <nav>
-      <Navigation/> 
-      </nav>
-     
+    <nav>
+    <Navigation/> 
+    </nav> 
     <LoginComp/>
     <GradeComp/>
     <AssignEventComp/>
