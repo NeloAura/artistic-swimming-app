@@ -21,7 +21,7 @@ function App() {
     <GradeComp/>
     <AssignEventComp/>
     <EventCard/>
-    <QRCodeGenerator ssid="Aura" password="notinpan10" />
+    <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
     </ChakraProvider>
   )
 }
