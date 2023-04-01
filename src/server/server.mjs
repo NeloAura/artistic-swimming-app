@@ -8,8 +8,8 @@ import wifi from 'node-wifi'
 
 
 //constants here
-const Api = express();
-const HTTP = http.Server(Api);
+const App = express();
+const HTTP = http.Server(App);
 
 //execution here
 
@@ -37,12 +37,12 @@ wifi.scan((error, networks) => {
 
 
 
-Api.use(cors());
+App.use(cors());
 
-Api.get('/test', (req, res) => res.status(200).send('success!'));
+App.get('/test', (req, res) => res.status(200).send('success!'));
 
-HTTP.listen(3001, () => {
-  console.log('listening on *:3001');
+HTTP.listen(9001, () => {
+  console.log('listening on *:9001');
   
 });
 

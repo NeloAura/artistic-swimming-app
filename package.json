@@ -1,6 +1,6 @@
 {
   "main": "public/main.js",
-  "homepage": "http://./",
+  "homepage": "./",
   "name": "artistic-swimming-desktop",
   "version": "0.1.0",
   "private": true,
@@ -34,7 +34,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "concurrently \"npm run react-start\" \"npm run server-start\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
+    "start": "concurrently  --kill-others \"npm run react-start\" \"npm run server-start\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
     "react-build": "react-scripts build",
     "server-build": "babel server --out-dir build-server",
     "server-start": "nodemon --watch server --exec babel-node src/server/server.mjs",
@@ -42,7 +42,7 @@
     "test": "react-scripts test",
     "electron-dev": "node src/scripts/dev.js src/scripts/start.js",
     "eject": "react-scripts eject",
-    "dev": "concurrently --kill-others \"cross-env BROWSER=none npm start\" \"npm:electron-dev\"",
+    "dev": "concurrently --kill-others \"npm:electron-dev\" \"cross-env BROWSER=none npm start\"",
     "electron": "wait-on http://localhost:3000 && electron .",
     "electron-pack": "electron-builder -c.extraMetadata.main='./main.js'",
     "preelectron-pack": "npm run react-build && npm run server-build"
