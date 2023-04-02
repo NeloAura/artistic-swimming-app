@@ -14,17 +14,14 @@ import { QRCodeGenerator } from './Components/QRCodeGenerator';
 function App() {
   return (
     <ChakraProvider>
-    
-
-      <nav>
-      <Navigation/> 
-      </nav>
-     
+    <nav>
+    <Navigation/> 
+    </nav> 
     <LoginComp/>
     <GradeComp/>
     <AssignEventComp/>
     <EventCard/>
-    <QRCodeGenerator ssid="Aura" password="notinpan10" />
+    <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
     </ChakraProvider>
   )
 }

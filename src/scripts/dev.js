@@ -1,3 +1,4 @@
+
 if (!require('piping')()) { return; }
 
 const electron = require('electron');

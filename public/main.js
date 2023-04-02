@@ -4,6 +4,7 @@ const isDev = require('electron-is-dev');
 
 
 
+
 function createWindow() {
     
   if (!isDev) {
@@ -22,7 +23,7 @@ function createWindow() {
   })
    
   
-
+  
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : url.format({
     pathname: path.join(__dirname, 'build/index.html'),
     protocol: 'file:',
