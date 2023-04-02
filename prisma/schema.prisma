@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-=======
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
->>>>>>> 8aa3560e3b39f856343232ba7831dbffda145743
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-<<<<<<< HEAD
 model Club {
   idClub       Int           @id @default(autoincrement())
   Name         String?
@@ -112,32 +106,3 @@ model User_has_Score {
 
   @@id([User_iduser, Score_idScore])
 }
-=======
-// model Competition{
-  
-// }
-
-// model User{
-
-// }
-
-// model Role{
-
-// }
-
-// model Participant{
-
-// }
-
-// model Club{
-
-// }
-
-// model Score{
-
-// }
-
-// model Event{
-
-// }
->>>>>>> 8aa3560e3b39f856343232ba7831dbffda145743
