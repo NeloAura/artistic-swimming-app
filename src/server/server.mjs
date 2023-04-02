@@ -1,50 +1,67 @@
-//import here
+// import libraries
 import http from 'http';
 import express from 'express';
 import cors from 'cors';
-import wifi from 'node-wifi'
-// import {exec} from 'child_process'
-// import hotspot from 'node-hotspot'
+// import { io } from 'socket.io-client';
+import { Server } from 'socket.io';
+import wifi from 'node-wifi';
+import os from 'os';
+import networkAddress from 'network-address'
 
+// constants
+const app = express();
+const server = http.createServer(app);
+const io = new Server(http);
+const serverIPAddress = networkAddress.ipv4(os.networkInterfaces());
 
-//constants here
-const App = express();
-const HTTP = http.Server(App);
-
-//execution here
-
+// wifi setup
 wifi.init({
   iface: null // network interface, choose a random wifi interface if set to null
 });
-// Scan for available networks
+
 wifi.scan((error, networks) => {
   if (error) {
     console.log(error);
   } else {
     console.log('Available networks:', networks);
-    // Connect to a network
+
     wifi.connect({ ssid: 'BBS', password: 'BandaBouSplash01!' }, (error) => {
       if (error) {
         console.log(error);
       } else {
         console.log('Connected to Wi-Fi network');
-        // Start your server
-        // ...
+
+       
+
+        // Socket server event handling
+        io.on('connection', (socket) => {
+          console.log('A client connected');
+
+          // Send a test message to the connected client
+          socket.emit('serverIPAddress', serverIPAddress);
+
+          // Handle incoming messages from the client
+          socket.on('message', (data) => {
+            console.log('Received message from client:', data);
+          });
+        });
+          
+         // Start the socket server
+         server.listen(9001, () => {
+          console.log('Server listening on *:9001');
+        });
+
       }
     });
   }
 });
 
+// middleware
+app.use(cors());
 
+// routes
+app.get('/test', (req, res) => res.status(200).send('success!'));
 
-App.use(cors());
-
-App.get('/test', (req, res) => res.status(200).send('success!'));
-
-HTTP.listen(9001, () => {
-  console.log('listening on *:9001');
-  
-});
 
 
 // const options = {
