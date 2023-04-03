@@ -18,6 +18,7 @@
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
+    "dgram": "^1.0.1",
     "electron-is-dev": "^2.0.0",
     "express": "^4.17.1",
     "framer-motion": "7.3.0",
