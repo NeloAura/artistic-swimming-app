@@ -7,7 +7,7 @@ const router = Router();
 
 
 // routes
-router.post('/authenticate', authenticateSchema, authenticate);
+router.post('/authenticate', authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
 router.post('/register', registerSchema, register);
