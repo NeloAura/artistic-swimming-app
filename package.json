@@ -39,7 +39,7 @@
     "start": "concurrently  --kill-others \"npm run react-start\" \"npm run server-start\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
     "react-build": "react-scripts build",
     "server-build": "babel server --out-dir build-server",
-    "server-start": "nodemon --watch server --exec babel-node src/server/server.mjs",
+    "server-start": "nodemon --watch server --exec babel-node server/server.mjs",
     "react-start": " cross-env BROWSER=none react-scripts start",
     "test": "react-scripts test",
     "electron-dev": "node src/scripts/dev.js src/scripts/start.js",

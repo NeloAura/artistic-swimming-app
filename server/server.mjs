@@ -7,12 +7,14 @@ import { Server } from 'socket.io';
 import wifi from 'node-wifi';
 import os from 'os';
 import networkAddress from 'network-address'
+import bodyParser from 'body-parser'
 
 // constants
 const app = express();
 const server = http.createServer(app);
 const io = new Server(http);
 const serverIPAddress = networkAddress.ipv4(os.networkInterfaces());
+const PORT = 3000;
 
 // wifi setup
 wifi.init({
@@ -47,8 +49,13 @@ wifi.scan((error, networks) => {
         });
           
          // Start the socket server
-         server.listen(9001, () => {
-          console.log('Server listening on *:9001');
+         server.listen(PORT, () => {
+          const ipAddress = Object.values(os.networkInterfaces())
+            .flat()
+            .filter(({ family, internal }) => family === 'IPv4' && !internal)
+            .map(({ address }) => address)[0];
+          
+          console.log(`Server listening at http://${ipAddress}:${PORT}`);
         });
 
       }
@@ -61,7 +68,7 @@ app.use(cors());
 
 // routes
 app.get('/test', (req, res) => res.status(200).send('success!'));
-
+app.use('/users', require('../Controller/users.controller'));
 
 
 // const options = {

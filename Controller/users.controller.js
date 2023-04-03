@@ -1,10 +1,5 @@
 //imports
 import { Router } from 'express';
-
-import { object, string, ref, number } from 'joi';
-import validateRequest from '_middleware/validate-request';
-import authorize from '_middleware/authorize';
-import { Admin, User } from '_helpers/role';
 import { authenticate as _authenticate, refreshToken as _refreshToken, revokeToken as _revokeToken, register as _register, verifyEmail as _verifyEmail, forgotPassword as _forgotPassword, validateResetToken as _validateResetToken, resetPassword as _resetPassword, getAll as _getAll, getById as _getById, create as _create, update as _update, _delete } from '../Service/user.service';
 
 //constants
