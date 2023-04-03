@@ -1,6 +1,41 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+module.exports = {
+  createClub,
+  createCompetition,
+  createEvent,
+  createParticipant,
+  createScore,
+  createUser,
+  getAllClubs,
+  getAllCompetitions,
+  getAllEvents,
+  getAllParticipants,
+  getAllScores,
+  getAllUsers,
+  getClubById,
+  getCompetitionById,
+  getEventById,
+  getParticipantById,
+  getUserById,
+  updateClub,
+  updateCompetition,
+  updateEvent,
+  updateParticipant,
+  getScoreById,
+  updateUser,
+  deleteClub,
+  deleteCompetition,
+  deleteEvent,
+  deleteParticipant,
+  deleteScore,
+  deleteUser
+};
+
+
+
+//Club CRUD
 // CREATE a new club
 async function createClub(name: any, cellPhone: any, email: any) {
   const club = await prisma.club.create({
@@ -55,7 +90,9 @@ async function deleteClub(id: any) {
   return club;
 }
 
+ //-----------------------------------------------------------------------------------------------------------------------------
 
+//Competition CRUD
 // CREATE a new competition
 async function createCompetition(name: any) {
     const competition = await prisma.competition.create({
@@ -110,7 +147,9 @@ async function createCompetition(name: any) {
     return competition;
   }
 
+ //-----------------------------------------------------------------------------------------------------------------------------
 
+  // Event CRUD
   // CREATE a new event
 async function createEvent(name: any) {
     const event = await prisma.event.create({
@@ -161,7 +200,9 @@ async function createEvent(name: any) {
     return event;
   }
 
+  //-----------------------------------------------------------------------------------------------------------------------------
 
+  // Participant CRUD
   // CREATE a new participant
 async function createParticipant(data: any) {
     const participant = await prisma.participant.create({
@@ -216,7 +257,9 @@ async function createParticipant(data: any) {
     return participant;
   }
 
+   //-----------------------------------------------------------------------------------------------------------------------------
 
+  //Score CRUD
   // CREATE a new score
 async function createScore(data: any) {
     const score = await prisma.score.create({
@@ -265,7 +308,9 @@ async function createScore(data: any) {
     return score;
   }
 
+ //-----------------------------------------------------------------------------------------------------------------------------
 
+  //User CRUD
 // CREATE a new user
 async function createUser(data: any) {
   const user = await prisma.user.create({
