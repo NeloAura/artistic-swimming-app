@@ -41,7 +41,7 @@ function DeletePopover(button) {
       <PopoverTrigger>
         {button}
       </PopoverTrigger>
-      <PopoverContent color='white' bg='blue.800' borderColor='twiter.300'>
+      <PopoverContent color='white' bg='blue.700' borderColor='twiter.300'>
         <PopoverHeader pt={4} fontWeight='bold' border='0'>
           Alert !!
         </PopoverHeader>
