@@ -10,8 +10,8 @@ import dgram from 'dgram';
 // constants
 const app = express();
 const server = http.createServer(app);
-const PORT = 3000;
-const UDPPORT = 3001;
+const PORT = 3001;
+const UDPPORT = 3004;
 
 // wifi setup
 wifi.init({
