@@ -43,6 +43,7 @@ wifi.scan((error, networks) => {
 
      // Create a UDP server to broadcast the IP address
   const udpServer = dgram.createSocket('udp4');
+  udpServer.bind(3004)
   
   udpServer.on('listening', () => {
     const address = udpServer.address();
