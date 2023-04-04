@@ -7,11 +7,47 @@ import os from 'os';
 import bodyParser from 'body-parser'
 import dgram from 'dgram';
 
+
+// functions
+function getIpAddress() {
+  return new Promise((resolve, reject) => {
+    const ifaces = os.networkInterfaces();
+    let ipAddress;
+
+    Object.keys(ifaces).forEach(ifname => {
+      ifaces[ifname].forEach(iface => {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          ipAddress = iface.address;
+        }
+      });
+    });
+
+    if (ipAddress) {
+      resolve(ipAddress);
+    } else {
+      reject(new Error('Unable to retrieve IP address'));
+    }
+  });
+}
+
+async function sendMessage(message, client, port, address) {
+  const ip = await getIpAddress();
+  const data = `${message}${ip}`;
+  client.send(data, port, address, (error) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(`Message sent to ${address}:${port}`);
+    }
+  });
+}
+
 // constants
 const app = express();
 const server = http.createServer(app);
 const PORT = 3001;
-const UDPPORT = 3004;
+const UDPPORT = 3010;
+const routerIp = '192.168.1.255';
 
 // wifi setup
 wifi.init({
@@ -30,45 +66,42 @@ wifi.scan((error, networks) => {
       } else {
         console.log('Connected to Wi-Fi network');
 
-       
+        // Delay server startup for 20 seconds after Wi-Fi connection
+        setTimeout(() => {
+          server.listen(PORT, async () => {
+            const ipAddress = await getIpAddress();
           
-         // Start the socket server
-         server.listen(PORT, () => {
-          const ipAddress = Object.values(os.networkInterfaces())
-            .flat()
-            .filter(({ family, internal }) => family === 'IPv4' && !internal)
-            .map(({ address }) => address)[0];
-          
-          console.log(`Server listening at http://${ipAddress}:${PORT}`);
+            console.log(`Server listening at http://${ipAddress}:${PORT}`);
 
-     // Create a UDP server to broadcast the IP address
-  const udpServer = dgram.createSocket('udp4');
-  udpServer.bind(3004)
-  
-  udpServer.on('listening', () => {
-    const address = udpServer.address();
-    console.log(`UDP server is listening on ${address.address}:${address.port}`);
-  });
-  
-  // Listen for UDP messages
-  udpServer.on('message', (message, rinfo) => {
-    const msg = message.toString();
-    
-    // If the message is a request for the IP address, send the IP address back
-    if (msg === 'request-ip-address') {
-      const ip = getIpAddress();
-      udpServer.send(`server-ip-address:${ip}`, rinfo.port, rinfo.address);
-    }
-  });
-  
-  // Broadcast the IP address every 10 seconds
-  setInterval(() => {
-    const ip = getIpAddress();
-    udpServer.send(`server-ip-address:${ip}`, UDPPORT, '255.255.255.255');
-  }, 10000);
-
-        });
-
+            // Create a UDP server to broadcast the IP address
+            const udpServer = dgram.createSocket('udp4');
+            udpServer.bind(UDPPORT);
+            
+            udpServer.on('listening', () => {
+              const address = udpServer.address();
+              console.log(`UDP server is listening on ${address.address}:${address.port}`);
+            });
+            
+            
+            // Listen for UDP messages
+            udpServer.on('message', (message, rinfo) => {
+              const msg = message.toString();
+              
+              // If the message is a request for the IP address, send the IP address back
+              if (msg === 'request-ip-address') {
+                // const ip = getIpAddress();
+                // udpServer.send(`server-ip-address:${ip}`, rinfo.port, rinfo.address);
+                sendMessage(`server-ip-address:`, udpServer, rinfo.port, rinfo.address)
+              }
+            });
+            
+            // Broadcast the IP address every 10 seconds
+            setInterval(() => {
+              const ip = getIpAddress();
+              udpServer.send('request-ip-address', 0, 18, UDPPORT, routerIp);
+            }, 10000);
+          });
+        }, 20000);
       }
     });
   }
@@ -83,23 +116,3 @@ app.use(bodyParser.json());
 // routes
 app.get('/test', (req, res) => res.status(200).send('success!'));
 // app.use('/users', require('../Controller/users.controller'));
-
-
-//functions
-function getIpAddress() {
-  const ifaces = os.networkInterfaces();
-  let ipAddress;
-
-  Object.keys(ifaces).forEach(ifname => {
-    ifaces[ifname].forEach(iface => {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        ipAddress = iface.address;
-      }
-    });
-  });
-
-  return ipAddress;
-}
-
-
-   
