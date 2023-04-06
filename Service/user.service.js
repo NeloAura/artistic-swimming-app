@@ -49,6 +49,16 @@ async function authenticate({ email, password, ipAddress }) {
     };
 }
 
+async function authenticate({ username, password }) {
+    const user = await db.User.scope('withHash').findOne({ where: { username } });
+
+    if (!user || !user.isVerified || !(await bcrypt.compare(password, user.passwordHash))) {
+        throw 'Email or password is incorrect';
+    }
+    // return basic details and tokens
+    return basicDetails(user);
+}
+
 async function refreshToken({ token, ipAddress }) {
     const refreshToken = await getRefreshToken(token);
     const user = await refreshToken.getUser();

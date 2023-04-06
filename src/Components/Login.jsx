@@ -15,6 +15,20 @@ import {
 } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import adminAvatar from '../assets/images/BBS.jpg';
+import {http_post} from '../../utils/axios.js';
+
+
+//functions
+async function authenticate(username, password) {
+  try {
+    const response = await http_post('/authenticate', { username, password });
+    return response;
+  } catch (error) {
+    console.error(error);
+    return new RequestResult(500, 'Internal server error');
+  }
+}
+
 
 
 const LoginComp = () => {
@@ -22,9 +36,13 @@ const LoginComp = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Perform authentication check here
     // If authentication succeeds, set authenticated to true
+    const authResult = await authenticate(username, password);
+    console.log(authResult.status, authResult.data);
+
+    if(authResult.status=='200')
     setAuthenticated(true);
   };
 
