@@ -1,11 +1,9 @@
 import './App.css';
 import React from 'react';
-import { ChakraProvider} from '@chakra-ui/react'
-//import components here
-import Navigation from './Components/Navigation';   
-import LoginComp from './Components/Login';
-import GradeComp from './Components/Grade';
-import AssignEventComp from './Components/AssignEvent';
+import { Routes, Route } from "react-router-dom"
+//import components here  
+import Login from './Components/Login';
+
 import EventCard from './Components/EventCard';
 
 
@@ -13,15 +11,13 @@ import EventCard from './Components/EventCard';
 
 function App() {
   return (
-    <ChakraProvider>
-    <nav>
-    <Navigation/> 
-    </nav> 
-    <LoginComp/>
-    <GradeComp/>
-    <AssignEventComp/>
-    <EventCard/>
-    </ChakraProvider>
+    <div className="App">
+      <Routes>
+        <Route path="/" element={ <Login/> } />
+        <Route path="/event" element={ <EventCard/> } />
+        
+      </Routes>
+    </div>
   )
 }
 
