@@ -6,16 +6,15 @@ import wifi from 'node-wifi';
 import os from 'os';
 import bodyParser from 'body-parser'
 import dgram from 'dgram';
-
-
+import {PrismaClient} from '@prisma/client'
+import bcrypt from 'bcryptjs'
+import { router } from '../Service/crud_controller_service.mjs';
 // constants
 const app = express();
 const server = http.createServer(app);
 const PORT = 3001;
 const UDPPORT = 3010;
 const routerIp = '192.168.1.255';
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 // functions
@@ -53,20 +52,27 @@ async function sendMessage(message, client, port, address) {
 }
 
 async function createDefaultUser() {
-  const adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
+  const adminUser = await prisma.user.findUnique({ where: { iduser: 1 } });
   if (!adminUser) {
     const passwordHash = await bcrypt.hash('BandaBouSplash01!', 10);
     await prisma.user.create({
       data: {
-        name: 'BBS Admin',
-        username: 'admin',
-        password: passwordHash,
-        role: 'admin'
+        Name: 'BBS Admin',
+        Username: 'admin',
+        Password: passwordHash,
+        Role: 'admin'
       }
     });
   }
 }
 
+// middleware
+app.use(cors());
+app.use(bodyParser.json());
+// routes
+app.get('/test', (req, res) => res.status(200).send('success!'));
+app.use('/authenticate', router);
+app.use('/register', router);
 
 
 // wifi setup
@@ -128,10 +134,4 @@ wifi.scan((error, networks) => {
 
 
 
-// middleware
-app.use(cors());
-app.use(bodyParser.json());
 
-// routes
-app.get('/test', (req, res) => res.status(200).send('success!'));
-// app.use('/users', require('../Controller/users.controller'));

@@ -20,6 +20,8 @@ import {
   Stack,
   FormLabel,
   Input,
+  InputGroup,
+  InputLeftAddon,
   Textarea,
   Select,
   Drawer,
@@ -33,7 +35,7 @@ import {
 } from '@chakra-ui/react'
 import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
 import { QRCodeGenerator } from './QRCodeGenerator'
-import {http_post} from '../../utils/axios.js';
+import {http_post} from '../utils/axios.js';
 //constants
 
 
