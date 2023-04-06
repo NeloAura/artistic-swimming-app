@@ -8,6 +8,16 @@ import bodyParser from 'body-parser'
 import dgram from 'dgram';
 
 
+// constants
+const app = express();
+const server = http.createServer(app);
+const PORT = 3001;
+const UDPPORT = 3010;
+const routerIp = '192.168.1.255';
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const prisma = new PrismaClient();
+
 // functions
 function getIpAddress() {
   return new Promise((resolve, reject) => {
@@ -42,12 +52,22 @@ async function sendMessage(message, client, port, address) {
   });
 }
 
-// constants
-const app = express();
-const server = http.createServer(app);
-const PORT = 3001;
-const UDPPORT = 3010;
-const routerIp = '192.168.1.255';
+async function createDefaultUser() {
+  const adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
+  if (!adminUser) {
+    const passwordHash = await bcrypt.hash('BandaBouSplash01!', 10);
+    await prisma.user.create({
+      data: {
+        name: 'BBS Admin',
+        username: 'admin',
+        password: passwordHash,
+        role: 'admin'
+      }
+    });
+  }
+}
+
+
 
 // wifi setup
 wifi.init({
@@ -70,9 +90,8 @@ wifi.scan((error, networks) => {
         setTimeout(() => {
           server.listen(PORT, async () => {
             const ipAddress = await getIpAddress();
-          
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
-
+            await createDefaultUser();
             // Create a UDP server to broadcast the IP address
             const udpServer = dgram.createSocket('udp4');
             udpServer.bind(UDPPORT);

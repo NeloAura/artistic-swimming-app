@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -52,7 +51,7 @@ model Participant {
   idParticipant               Int                           @id @default(autoincrement())
   LastName                    String?
   FirstName                   String?
-  BirthYear                   String?
+  BirthYear                   DateTime?
   Division                    String?
   Age_Category                String?
   Country                     String?
@@ -81,6 +80,7 @@ model Score {
   Execution                 Float?
   Difficulty                Float?
   ArtisticExpression        Float?
+  ArtisticImpression        Float?
   Total                     Float?
   Participant               Participant      @relation(fields: [Participant_idParticipant, Club_idClub], references: [idParticipant, Club_idClub])
   Participant_idParticipant Int

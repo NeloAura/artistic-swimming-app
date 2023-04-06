@@ -20,9 +20,6 @@ import {
   Stack,
   FormLabel,
   Input,
-  InputGroup,
-  InputLeftAddon,
-  InputRightAddon,
   Textarea,
   Select,
   Drawer,
@@ -32,9 +29,36 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
+  Checkbox
 } from '@chakra-ui/react'
-import { SettingsIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
+import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
+import { QRCodeGenerator } from './QRCodeGenerator'
+import {http_post} from '../../utils/axios.js';
+//constants
 
+
+
+
+//functions
+
+// Register a new user with their username and password
+async function register(name, username, password, role) {
+  const data = {
+    name,
+    username,
+    password,
+    role,
+  };
+
+  const result = await http_post('/register', data);
+  if (result.status === 200) {
+    console.log('Registration successful:', result.data);
+    return result.data;
+  } else {
+    console.error('Registration failed:', result.data);
+    throw new Error('Registration failed');
+  }
+}
 
 function WalkthroughPopover(button) {
   const initialFocusRef = React.useRef()
@@ -66,21 +90,101 @@ function WalkthroughPopover(button) {
      >
           
           <ButtonGroup size='sm'>
-            
             {ParticipantDrawer()}
-            <Button colorScheme='purple' ref={initialFocusRef}>
-              Judge
-            </Button>
-            <Button colorScheme='blue'>Club</Button>
+            {UserDrawer()}
+            {ClubDrawer()}
           </ButtonGroup>
         </PopoverFooter>
       </PopoverContent>
     </Popover>
   )
 }
+function UserDrawer() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const firstField = React.useRef()
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const name = document.getElementById('name').value;
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    try {
+      await register(name, username, password, role);
+      onClose();
+    } catch (error) {
+      console.error('Failed to register user:', error);
+    }
+  };
+
+  return (
+    <>
+      <Button colorScheme='purple' onClick={onOpen}>User </Button>
+      <Drawer
+        isOpen={isOpen}
+        placement='right'
+        initialFocusRef={firstField}
+        onClose={onClose}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth='1px'>
+            Create a new account
+          </DrawerHeader>
+   
+          <DrawerBody>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing='24px'>
+                <Box>
+                  <FormLabel htmlFor='name'>Name</FormLabel>
+                  <Input
+                    ref={firstField}
+                    id='name'
+                    placeholder='Please enter name'
+                  />
+                  <FormLabel htmlFor='username'>Username</FormLabel>
+                  <Input
+                    id='username'
+                    placeholder='Please enter username'
+                  />
+                  <FormLabel htmlFor='password'>Password</FormLabel>
+                  <Input
+                    type='password'
+                    id='password'
+                    placeholder='Please enter password'
+                  />
+                </Box>
+
+                <Box>
+                  <FormLabel htmlFor='role'>Select Role</FormLabel>
+                  <Select id='role' defaultValue='Stakamahachi'>
+                    <option value='admin'>Admin</option>
+                    <option value='judge'>Jugde</option>
+                  </Select>
+                </Box>
+              </Stack>
+              <Button mt={4} colorScheme='blue' type='submit'>Submit</Button>
+            </form>
+          </DrawerBody>
+
+          <DrawerFooter borderTopWidth='1px'>
+            <Button variant='outline' mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+}
 function ParticipantDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const firstField = React.useRef()
+  const [checkedItems, setCheckedItems] = React.useState([false, false])
+  const allChecked = checkedItems.every(Boolean)
+  const isIndeterminate = checkedItems.some(Boolean) && !allChecked
 
   return (
     <>
@@ -101,33 +205,148 @@ function ParticipantDrawer() {
           <DrawerBody>
             <Stack spacing='24px'>
               <Box>
-                <FormLabel htmlFor='username'>Name</FormLabel>
+              <FormLabel htmlFor='lastname'>Participant LastName</FormLabel>
                 <Input
                   ref={firstField}
-                  id='username'
-                  placeholder='Please enter user name'
+                  id='lastname'
+                  placeholder='Please enter lastname'
                 />
-              </Box>
+                <FormLabel htmlFor='firstname'>Participant FirstName</FormLabel>
+                <Input
+                  id='firstname'
+                  placeholder='Please enter firstname'
+                />
+                <FormLabel htmlFor='BirthDate'>Participant FirstName</FormLabel>
+                <Input
+                type='date'
+                id='firstname'
+                placeholder='BirthDate'
+                >
 
-              <Box>
-                <FormLabel htmlFor='url'>Url</FormLabel>
-                <InputGroup>
-                  <InputLeftAddon>http://</InputLeftAddon>
-                  <Input
-                    type='url'
-                    id='url'
-                    placeholder='Please enter domain'
-                  />
-                  <InputRightAddon>.com</InputRightAddon>
-                </InputGroup>
-              </Box>
-
-              <Box>
-                <FormLabel htmlFor='owner'>Select Owner</FormLabel>
-                <Select id='owner' defaultValue='segun'>
-                  <option value='segun'>Segun Adebayo</option>
-                  <option value='kola'>Kola Tioluwani</option>
+                </Input>
+                <FormLabel htmlFor='country'>Country</FormLabel>
+                <Select id='country' defaultValue='Curacao'>
+                  <option value='Curacao'>AWD</option>
+                  <option value='Bonaire'>Novice-A</option>
+                  <option value='Aruba'>Novice-B</option>
+                  <option value='Venezuela'>Age-Group</option>
                 </Select>
+              </Box>
+              <Box>
+              
+              </Box>
+
+              <Box>
+                <FormLabel htmlFor='club'>Select Club</FormLabel>
+                <Select id='club' defaultValue='Stakamahachi'>
+                  <option value='Stakamahachi'>Stakamahachi</option>
+                  <option value='Tioluwani'>Tioluwani</option>
+                </Select>
+                <FormLabel htmlFor='division'>Select Division</FormLabel>
+                <Select id='division' defaultValue='awd'>
+                  <option value='awd'>AWD</option>
+                  <option value='novice-a'>Novice-A</option>
+                  <option value='novice-b'>Novice-B</option>
+                  <option value='age-group'>Age-Group</option>
+                </Select>
+                <FormLabel htmlFor='age-categorie'>Select AgeCategorie</FormLabel>
+                
+              </Box> 
+
+              <Box> 
+              {/* awd */}
+              <>
+              <Checkbox>
+                AWD
+              </Checkbox>
+           {/* Novice */}
+      <Checkbox
+        isChecked={allChecked}
+        isIndeterminate={isIndeterminate}
+        onChange={(e) => setCheckedItems([e.target.checked, e.target.checked])}
+      >
+        Novice
+      </Checkbox>
+      <Stack pl={6} mt={1} spacing={1}>
+        <Checkbox
+          isChecked={checkedItems[0]}
+          onChange={(e) => setCheckedItems([e.target.checked, checkedItems[1]])}
+        >
+          6 & Under
+        </Checkbox>
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          7 & 8
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          9 & 10
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          11 & 12
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          13 & O
+        </Checkbox>
+      </Stack>
+
+         {/* Agegroup */}
+      <Checkbox
+        isChecked={allChecked}
+        isIndeterminate={isIndeterminate}
+        onChange={(e) => setCheckedItems([e.target.checked, e.target.checked])}
+      >
+        AgeGroup
+      </Checkbox>
+      <Stack pl={6} mt={1} spacing={1}>
+        <Checkbox
+          isChecked={checkedItems[0]}
+          onChange={(e) => setCheckedItems([e.target.checked, checkedItems[1]])}
+        >
+          10 & Under
+        </Checkbox>
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          12 & Under
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          Youth
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          Junior
+        </Checkbox>
+
+        <Checkbox
+          isChecked={checkedItems[1]}
+          onChange={(e) => setCheckedItems([checkedItems[0], e.target.checked])}
+        >
+          Senior
+        </Checkbox>
+      </Stack>
+    </>
               </Box>
 
               <Box>
@@ -148,8 +367,99 @@ function ParticipantDrawer() {
     </>
   )
 }
+function ClubDrawer() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const firstField = React.useRef()
+
+  return (
+    <>
+      <Button colorScheme='blue' onClick={onOpen}>Club </Button>
+      <Drawer
+        isOpen={isOpen}
+        placement='right'
+        initialFocusRef={firstField}
+        onClose={onClose}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth='1px'>
+            Create a new account
+          </DrawerHeader>
+   
+          <DrawerBody>
+            <Stack spacing='24px'>
+              <Box>
+              <FormLabel htmlFor='name'>Name</FormLabel>
+                <Input
+                  ref={firstField}
+                  id='name'
+                  placeholder='Please enter Club Name'
+                />
+                <FormLabel htmlFor='Cell-phone'>Cell-Phone</FormLabel>
+                <InputGroup>
+               <InputLeftAddon children='+5999' />
+               <Input type='tel' placeholder='phone number' />
+               </InputGroup>
+                <FormLabel htmlFor='email'>Email</FormLabel>
+                <Input
+                  type='email'
+                  id='email'
+                  placeholder='Please enter email'
+                />
+              </Box>
+
+              <Box>
+                <FormLabel htmlFor='role'>Select Role</FormLabel>
+                <Select id='role' defaultValue='Stakamahachi'>
+                  <option value='admin'>Admin</option>
+                  <option value='judge'>Jugde</option>
+                </Select>
+              </Box>
+            </Stack>
+          </DrawerBody>
+
+          <DrawerFooter borderTopWidth='1px'>
+            <Button variant='outline' mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme='blue'>Submit</Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  )
+}
+
+function ImagePopover(button) {
+ 
+  const initialFocusRef = React.useRef()
+  return (
+    <Popover
+        placement="bottom-start"
+        initialFocusRef={initialFocusRef}
+        closeOnBlur={false}
+      >
+        <PopoverTrigger>
+          {button}
+        </PopoverTrigger>
+        <PopoverContent>
+          <PopoverArrow />
+          <PopoverCloseButton />
+          <PopoverHeader>QR Code</PopoverHeader>
+          <PopoverBody>
+          <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+  )
+}
+
+
 
 const Navigation = () => (
+
+  
   <List
     styleType="square"
     display="flex"
@@ -263,9 +573,9 @@ const Navigation = () => (
     >
       Clubs
     </Button>
-    <IconButton
+    {ImagePopover(<IconButton
       aria-label="icon"
-      icon={<SettingsIcon />}
+      icon={<InfoOutlineIcon/>}
       size="lg"
       isRound
       display="flex"
@@ -275,10 +585,11 @@ const Navigation = () => (
       mt={3}
       variant="link"
       backgroundColor="whiteAlpha.900"
-      borderRadius={45}
       border={2}
+      borderRadius={45}
       mb={3}
-    />
+      alignItems="center"
+    />)}
     
     <Avatar
       size="md"
