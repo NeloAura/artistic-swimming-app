@@ -7,7 +7,7 @@ import LoginComp from './Components/Login';
 import GradeComp from './Components/Grade';
 import AssignEventComp from './Components/AssignEvent';
 import EventCard from './Components/EventCard';
-import { QRCodeGenerator } from './Components/QRCodeGenerator';
+
 
 
 
@@ -21,7 +21,6 @@ function App() {
     <GradeComp/>
     <AssignEventComp/>
     <EventCard/>
-    <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
     </ChakraProvider>
   )
 }

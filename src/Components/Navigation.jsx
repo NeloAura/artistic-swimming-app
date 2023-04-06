@@ -33,8 +33,15 @@ import {
   DrawerContent,
   DrawerCloseButton,
 } from '@chakra-ui/react'
-import { SettingsIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
+import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
+import { QRCodeGenerator } from './QRCodeGenerator'
 
+//constants
+
+
+
+
+//functions
 
 function WalkthroughPopover(button) {
   const initialFocusRef = React.useRef()
@@ -148,8 +155,35 @@ function ParticipantDrawer() {
     </>
   )
 }
+function ImagePopover(button) {
+ 
+  const initialFocusRef = React.useRef()
+  return (
+    <Popover
+        placement="bottom-start"
+        initialFocusRef={initialFocusRef}
+        closeOnBlur={false}
+      >
+        <PopoverTrigger>
+          {button}
+        </PopoverTrigger>
+        <PopoverContent>
+          <PopoverArrow />
+          <PopoverCloseButton />
+          <PopoverHeader>QR Code</PopoverHeader>
+          <PopoverBody>
+          <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+  )
+}
+
+
 
 const Navigation = () => (
+
+  
   <List
     styleType="square"
     display="flex"
@@ -263,9 +297,9 @@ const Navigation = () => (
     >
       Clubs
     </Button>
-    <IconButton
+    {ImagePopover(<IconButton
       aria-label="icon"
-      icon={<SettingsIcon />}
+      icon={<InfoOutlineIcon/>}
       size="lg"
       isRound
       display="flex"
@@ -275,10 +309,11 @@ const Navigation = () => (
       mt={3}
       variant="link"
       backgroundColor="whiteAlpha.900"
-      borderRadius={45}
       border={2}
+      borderRadius={45}
       mb={3}
-    />
+      alignItems="center"
+    />)}
     
     <Avatar
       size="md"
