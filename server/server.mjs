@@ -62,20 +62,23 @@ async function createDefaultUser() {
         Password: passwordHash,
         Role: 'admin'
       }
+      
     });
+    
   }
+   
 }
 
 // middleware
 app.use(cors());
 app.use(bodyParser.json());
+
 // routes
 app.get('/test', (req, res) => res.status(200).send('success!'));
-app.use('/authenticate', router);
-app.use('/register', router);
 
 
-// wifi setup
+
+// wifi setu
 wifi.init({
   iface: null // network interface, choose a random wifi interface if set to null
 });
@@ -97,7 +100,7 @@ wifi.scan((error, networks) => {
           server.listen(PORT, async () => {
             const ipAddress = await getIpAddress();
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
-            await createDefaultUser();
+            createDefaultUser();
             // Create a UDP server to broadcast the IP address
             const udpServer = dgram.createSocket('udp4');
             udpServer.bind(UDPPORT);

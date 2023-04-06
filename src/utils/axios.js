@@ -2,7 +2,7 @@ import axios from "axios";
 import os from "os";
 
 const PROTOCOL = "http:";
-const DOMAIN = getIpAddress();
+const DOMAIN = '192.168.1.102';
 const PORT = ":3001";
 
 const client = axios.create({

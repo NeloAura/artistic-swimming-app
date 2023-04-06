@@ -52,8 +52,8 @@ async function register(name, username, password, role) {
     role,
   };
 
-  const result = await http_post('/register', data);
-  if (result.status === 200) {
+  const result = await http_post('/users', data);
+  if (result.status === 201) {
     console.log('Registration successful:', result.data);
     return result.data;
   } else {

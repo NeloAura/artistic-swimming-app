@@ -43,7 +43,7 @@ const LoginComp = () => {
     const authResult = await authenticate(username, password);
     console.log(authResult.status, authResult.data);
 
-    if(authResult.status==='200')
+    if(authResult.status===200)
     setAuthenticated(true);
   };
 
