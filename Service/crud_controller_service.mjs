@@ -1,7 +1,9 @@
+
 import express from "express";
 import bcrypt from 'bcryptjs';
+import {PrismaClient} from '@prisma/client'
+
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 
@@ -521,4 +523,4 @@ router.delete("/users/:id", async (req, res) => {
 });
 //#endregion
 
-module.exports = router;
+export { router };

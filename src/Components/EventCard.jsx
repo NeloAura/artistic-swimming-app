@@ -70,10 +70,10 @@ function DeletePopover(button) {
 
 
 const EventCard = () => (
-  <ChakraProvider resetCSS>
+  <ChakraProvider>
   <nav>
   <NavigationComp/>
-  <nav>
+  </nav>
     <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(400px, 1fr))'>
 <Card maxW='lg' bg='twitter.300' margin={1}>
   <CardHeader>
@@ -196,8 +196,12 @@ const EventCard = () => (
 </Card>
 
     </SimpleGrid>
+
+
     <AssignEventComp/>
-</ChakraProvider>
+
+    </ChakraProvider>
+
 )
 
-export default EventCard
+export default EventCard;

@@ -55,18 +55,21 @@ function generateSecretCode(length = 8) {
 }
 
 async function createDefaultUser() {
-  const adminUser = await prisma.user.findUnique({ where: { username: 'admin' } });
+  const adminUser = await prisma.user.findUnique({ where: { iduser: 1 } });
   if (!adminUser) {
     const passwordHash = await bcrypt.hash('BandaBouSplash01!', 10);
     await prisma.user.create({
       data: {
-        name: 'BBS Admin',
-        username: 'admin',
-        password: passwordHash,
-        role: 'admin'
+        Name: 'BBS Admin',
+        Username: 'admin',
+        Password: passwordHash,
+        Role: 'admin'
       }
+      
     });
+    
   }
+   
 }
 
 io.on("connection", (socket) => {
@@ -81,7 +84,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// wifi setup
+
+// wifi setu
 wifi.init({
   iface: null // network interface, choose a random wifi interface if set to null
 });
@@ -114,10 +118,4 @@ wifi.scan((error, networks) => {
 
 
 
-// middleware
-app.use(cors());
-app.use(bodyParser.json());
 
-// routes
-app.get('/test', (req, res) => res.status(200).send('success!'));
-// app.use('/users', require('../Controller/users.controller'));

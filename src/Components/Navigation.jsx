@@ -20,6 +20,8 @@ import {
   Stack,
   FormLabel,
   Input,
+  InputGroup,
+  InputLeftAddon,
   Textarea,
   Select,
   Drawer,
@@ -33,7 +35,7 @@ import {
 } from '@chakra-ui/react'
 import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
 import { QRCodeGenerator } from './QRCodeGenerator'
-import {http_post} from '../../utils/axios.js';
+import {http_post} from '../utils/axios.js';
 //constants
 
 
@@ -50,8 +52,8 @@ async function register(name, username, password, role) {
     role,
   };
 
-  const result = await http_post('/register', data);
-  if (result.status === 200) {
+  const result = await http_post('/users', data);
+  if (result.status === 201) {
     console.log('Registration successful:', result.data);
     return result.data;
   } else {
