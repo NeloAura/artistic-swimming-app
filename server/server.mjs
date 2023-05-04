@@ -1,22 +1,23 @@
 // import libraries
 import http from 'http';
 import express from 'express';
+import socketio from "socket.io";
+import qrcode from 'qrcode'
 import cors from 'cors';
 import wifi from 'node-wifi';
 import os from 'os';
 import bodyParser from 'body-parser'
-import dgram from 'dgram';
+
 
 
 // constants
 const app = express();
 const server = http.createServer(app);
 const PORT = 3001;
-const UDPPORT = 3010;
-const routerIp = '192.168.1.255';
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
+const io = socketio(server);
 
 // functions
 function getIpAddress() {
@@ -40,16 +41,17 @@ function getIpAddress() {
   });
 }
 
-async function sendMessage(message, client, port, address) {
-  const ip = await getIpAddress();
-  const data = `${message}${ip}`;
-  client.send(data, port, address, (error) => {
-    if (error) {
-      console.error(error);
-    } else {
-      console.log(`Message sent to ${address}:${port}`);
-    }
-  });
+function generateSecretCode(length = 8) {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters[randomIndex];
+  }
+
+  return code;
 }
 
 async function createDefaultUser() {
@@ -67,7 +69,17 @@ async function createDefaultUser() {
   }
 }
 
+io.on("connection", (socket) => {
+  console.log("A client has connected");
 
+  socket.on("generateQRCode", ({ ssid, password }) => {
+    
+    const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;T:IP;P:${getIpAddress()};;T:SECRET;P:${generateSecretCode()};;`;
+    qrcode.toDataURL(wifiQRCodeData).then((dataURL) => {
+      socket.emit("QRCodeData", dataURL);
+    });
+  });
+});
 
 // wifi setup
 wifi.init({
@@ -92,33 +104,7 @@ wifi.scan((error, networks) => {
             const ipAddress = await getIpAddress();
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
             await createDefaultUser();
-            // Create a UDP server to broadcast the IP address
-            const udpServer = dgram.createSocket('udp4');
-            udpServer.bind(UDPPORT);
-            
-            udpServer.on('listening', () => {
-              const address = udpServer.address();
-              console.log(`UDP server is listening on ${address.address}:${address.port}`);
-            });
-            
-            
-            // Listen for UDP messages
-            udpServer.on('message', (message, rinfo) => {
-              const msg = message.toString();
-              
-              // If the message is a request for the IP address, send the IP address back
-              if (msg === 'request-ip-address') {
-                // const ip = getIpAddress();
-                // udpServer.send(`server-ip-address:${ip}`, rinfo.port, rinfo.address);
-                sendMessage(`server-ip-address:`, udpServer, rinfo.port, rinfo.address)
-              }
-            });
-            
-            // Broadcast the IP address every 10 seconds
-            setInterval(() => {
-              const ip = getIpAddress();
-              udpServer.send('request-ip-address', 0, 18, UDPPORT, routerIp);
-            }, 10000);
+          
           });
         }, 20000);
       }
