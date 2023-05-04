@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Navigate} from 'react-router-dom'
+import { Navigate } from 'react-router-dom';
 
 import {
   ChakraProvider,
@@ -11,26 +11,26 @@ import {
   Avatar,
   Text,
   IconButton,
-
 } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import adminAvatar from '../assets/images/BBS.jpg';
-import {http_post} from '../utils/axios.js'
-
+import { emit } from '../utils/socket_io.js';
 
 //functions
 async function authenticate(username, password) {
-  try {
-    const response = await http_post('/authenticate', { username, password });
-    return Promise.resolve({ status: response.status, data: response.data });
-  } catch (error) {
-    console.error(error);
-    return Promise.reject({ status: error.response.status, data: error.response.data });
-  }
+  return new Promise((resolve, reject) => {
+    emit('authenticate', { username, password }).then((response) => {
+      if (response.status === 200) {
+        resolve({ status: response.status, data: response.data });
+      } else {
+        reject({ status: response.status, data: response.data });
+      }
+    }).catch((error) => {
+      console.error(error);
+      reject({ status: error.status, data: error.message });
+    });
+  });
 }
-
-
-
 
 const LoginComp = () => {
   const [authenticated, setAuthenticated] = useState(false);
@@ -40,11 +40,16 @@ const LoginComp = () => {
   const handleLogin = async () => {
     // Perform authentication check here
     // If authentication succeeds, set authenticated to true
-    const authResult = await authenticate(username, password);
-    console.log(authResult.status, authResult.data);
+    try {
+      const authResult = await authenticate(username, password);
+      console.log(authResult.status, authResult.data);
 
-    if(authResult.status===200)
-    setAuthenticated(true);
+      if (authResult.status === 200) {
+        setAuthenticated(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   if (authenticated) {
@@ -114,10 +119,4 @@ const LoginComp = () => {
   );
 };
 
-const Login = () => {
-  return (
-    <LoginComp/>
-  );
-};
-
-export default Login;
+export default LoginComp;

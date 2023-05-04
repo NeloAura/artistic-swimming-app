@@ -35,7 +35,7 @@ import {
 } from '@chakra-ui/react'
 import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
 import { QRCodeGenerator } from './QRCodeGenerator'
-import {http_post} from '../utils/axios.js';
+import {emit} from '../utils/socket_io.js';
 //constants
 
 
@@ -45,22 +45,16 @@ import {http_post} from '../utils/axios.js';
 
 // Register a new user with their username and password
 async function register(name, username, password, role) {
-  const data = {
-    name,
-    username,
-    password,
-    role,
-  };
-
-  const result = await http_post('/users', data);
-  if (result.status === 201) {
-    console.log('Registration successful:', result.data);
-    return result.data;
-  } else {
-    console.error('Registration failed:', result.data);
+  try {
+    const result = await emit('register', { name, username, password, role });
+    console.log('Registration successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Registration failed:', error);
     throw new Error('Registration failed');
   }
 }
+
 
 function WalkthroughPopover(button) {
   const initialFocusRef = React.useRef()

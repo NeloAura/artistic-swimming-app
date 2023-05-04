@@ -1,23 +1,21 @@
 // import libraries
 import http from 'http';
+import bcrypt from 'bcryptjs';
 import express from 'express';
-import socketio from "socket.io";
+import {Server} from 'socket.io';
 import qrcode from 'qrcode'
-import cors from 'cors';
 import wifi from 'node-wifi';
 import os from 'os';
-import bodyParser from 'body-parser'
+import{ PrismaClient } from '@prisma/client';
 
 
 
 // constants
 const app = express();
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 const PORT = 3001;
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
-const io = socketio(server);
+const io = new Server(httpServer);
 
 // functions
 function getIpAddress() {
@@ -82,10 +80,71 @@ io.on("connection", (socket) => {
       socket.emit("QRCodeData", dataURL);
     });
   });
+  socket.on('authenticate', async ({ username, password }) => {
+    try {
+      // Find the user by their username
+      const user = await prisma.user.findUnique({ where: { username } });
+
+      if (!user) {
+        throw 'User not found';
+      }
+
+      // Check if the password is correct
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+      if (!isPasswordValid) {
+        throw 'Password is incorrect';
+      }
+
+      // Generate a JWT token
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
+
+      // Send the token to the client
+      socket.emit('authenticated', { token });
+
+    } catch (error) {
+      console.error(error);
+      socket.emit('authenticationFailed', { message: 'Authentication failed' });
+    }
+  });
+  socket.on('register-user', async ({ name, username, password, role }) => {
+    try {
+      // Check if the username already exists
+      const existingUser = await prisma.user.findUnique({ where: { username } });
+  
+      if (existingUser) {
+        throw 'Username is already taken';
+      }
+  
+      // Hash the password
+      const passwordHash = await bcrypt.hash(password, 10);
+  
+      // Create the new user
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          username,
+          passwordHash,
+          role: role || 'judge', // set the role to "judge" if it's not provided
+        },
+      });
+  
+      // Generate a JWT token
+      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET);
+  
+      // Send the token to the client
+      socket.emit('registered', { token });
+  
+    } catch (error) {
+      console.error(error);
+      socket.emit('registrationFailed', { message: 'Registration failed' });
+    }
+  });
+  
 });
 
 
-// wifi setu
+// wifi setup
 wifi.init({
   iface: null // network interface, choose a random wifi interface if set to null
 });
