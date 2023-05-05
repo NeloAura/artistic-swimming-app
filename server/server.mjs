@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import {Server} from 'socket.io';
 import wifi from 'node-wifi';
+import os from 'os';
 import{ PrismaClient } from '@prisma/client';
 
 
@@ -16,6 +17,28 @@ const prisma = new PrismaClient();
 const io = new Server(httpServer);
 
 // functions
+
+function getIpAddress() {
+  return new Promise((resolve, reject) => {
+    const ifaces = os.networkInterfaces();
+    let ipAddress;
+
+    Object.keys(ifaces).forEach(ifname => {
+      ifaces[ifname].forEach(iface => {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          ipAddress = iface.address;
+        }
+      });
+    });
+
+    if (ipAddress) {
+      resolve(ipAddress);
+    } else {
+      reject(new Error('Unable to retrieve IP address'));
+    }
+  });
+}
+
 async function createDefaultUser() {
   const adminUser = await prisma.user.findUnique({ where: { iduser: 1 } });
   if (!adminUser) {
@@ -37,6 +60,10 @@ async function createDefaultUser() {
 io.on("connection", (socket) => {
   console.log("A client has connected");
 
+  socket.on('secretCode', (secretCode) => {
+    console.log(`Received secret code: ${secretCode}`);
+    // Do something with the secret code
+  });
   socket.on('authenticate', async ({ username, password }) => {
     try {
       // Find the user by their username

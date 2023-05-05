@@ -2,6 +2,7 @@
 import { Image, Box, Center, Heading } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import os from "os";
+import io from 'socket.io-client';
 
 function getIpAddress() {
   return new Promise((resolve, reject) => {
@@ -24,7 +25,7 @@ function getIpAddress() {
   });
 }
 
-function generateSecretCode(length = 8) {
+async function generateSecretCode(length = 8) {
   const characters =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let code = '';
@@ -34,6 +35,12 @@ function generateSecretCode(length = 8) {
     code += characters[randomIndex];
   }
 
+  // Create a socket connection to the server
+const ip = await getIpAddress();
+const socket = io(`http://${ip}:3000`);
+// Emit the secret code to the server
+socket.emit('secretCode', secretCode);
+
   return code;
 }
 
@@ -42,25 +49,37 @@ export function QRCodeGenerator({ ssid, password }) {
   const [qrCodeDataURL, setQRCodeDataURL] = useState("");
 
   useEffect(() => {
-    const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;T:IP;P:${getIpAddress()};;T:SECRET;P:${generateSecretCode()};;`;
-    qrcode.toDataURL(wifiQRCodeData).then((dataURL) => {
-      
-      setQRCodeDataURL(dataURL);
-    });
+    const generateQRCode = async () => {
+      try {
+        const ipAddress = await getIpAddress();
+        const secretCode = generateSecretCode();
+
+        const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;T:IP;P:${ipAddress};;T:SECRET;P:${secretCode};;`;
+
+        const dataURL = await qrcode.toDataURL(wifiQRCodeData);
+
+        setQRCodeDataURL(dataURL);
+      } catch (error) {
+        console.error("An error occurred while generating the QR code:", error);
+      }
+    };
+
+    generateQRCode();
   }, [ssid, password]);
 
   return (
     <Center h="100vh">
       <Box textAlign="center">
-    <Heading mb={4}>Connect to ASA</Heading>
-    <Image
-      src={qrCodeDataURL}
-      alt="WiFi QR code"
-      boxSize="300px"
-      objectFit="contain"
-      align="center"
-    />
-    </Box>
+        <Heading mb={4}>Connect to ASA</Heading>
+        <Image
+          src={qrCodeDataURL}
+          alt="WiFi QR code"
+          boxSize="300px"
+          objectFit="contain"
+          align="center"
+        />
+      </Box>
     </Center>
   );
 }
+
