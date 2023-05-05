@@ -3,9 +3,7 @@ import http from 'http';
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import {Server} from 'socket.io';
-import qrcode from 'qrcode'
 import wifi from 'node-wifi';
-import os from 'os';
 import{ PrismaClient } from '@prisma/client';
 
 
@@ -18,40 +16,6 @@ const prisma = new PrismaClient();
 const io = new Server(httpServer);
 
 // functions
-function getIpAddress() {
-  return new Promise((resolve, reject) => {
-    const ifaces = os.networkInterfaces();
-    let ipAddress;
-
-    Object.keys(ifaces).forEach(ifname => {
-      ifaces[ifname].forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          ipAddress = iface.address;
-        }
-      });
-    });
-
-    if (ipAddress) {
-      resolve(ipAddress);
-    } else {
-      reject(new Error('Unable to retrieve IP address'));
-    }
-  });
-}
-
-function generateSecretCode(length = 8) {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    code += characters[randomIndex];
-  }
-
-  return code;
-}
-
 async function createDefaultUser() {
   const adminUser = await prisma.user.findUnique({ where: { iduser: 1 } });
   if (!adminUser) {
@@ -73,13 +37,6 @@ async function createDefaultUser() {
 io.on("connection", (socket) => {
   console.log("A client has connected");
 
-  socket.on("generateQRCode", ({ ssid, password }) => {
-    
-    const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;T:IP;P:${getIpAddress()};;T:SECRET;P:${generateSecretCode()};;`;
-    qrcode.toDataURL(wifiQRCodeData).then((dataURL) => {
-      socket.emit("QRCodeData", dataURL);
-    });
-  });
   socket.on('authenticate', async ({ username, password }) => {
     try {
       // Find the user by their username
@@ -163,7 +120,7 @@ wifi.scan((error, networks) => {
 
         // Delay server startup for 20 seconds after Wi-Fi connection
         setTimeout(() => {
-          server.listen(PORT, async () => {
+          httpServer.listen(PORT, async () => {
             const ipAddress = await getIpAddress();
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
             await createDefaultUser();
