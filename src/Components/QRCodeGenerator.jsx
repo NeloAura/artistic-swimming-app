@@ -1,6 +1,7 @@
 import { Image,Box, Center, Heading } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import qrcode from "qrcode";
+import os from "os";
 
 function getIpAddress() {
   return new Promise((resolve, reject) => {
@@ -43,8 +44,8 @@ function generateSecretCode(length = 8) {
 
 export async function QRCodeGenerator({ ssid, password }) {
   const [qrCodeDataURL, setQRCodeDataURL] = useState("");
-  const [ipAddress] = useState(generateSecretCode());
-  const [secretCode] = useState(await getIpAddress());
+  const [ipAddress, setIpAddress] = useState(generateSecretCode());
+  const [secretCode, setSecretCode] = useState(await getIpAddress());
   
 
   useEffect(() => {
