@@ -4,6 +4,7 @@ import qrcode from "qrcode";
 
 export function QRCodeGenerator({ ssid, password }) {
   const [qrCodeDataURL, setQRCodeDataURL] = useState("");
+  //
 
   useEffect(() => {
     const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;`;
