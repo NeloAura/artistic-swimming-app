@@ -36,6 +36,7 @@ model Event {
   idEvent               Int                     @id @default(autoincrement())
   Event                 String                  @unique
   Event_has_Participant Event_has_Participant[]
+  Event_has_Groups      Event_has_Groups[]
 }
 
 model Event_has_Participant {
@@ -62,6 +63,7 @@ model Participant {
   Scores                      Score[]
   Event_has_Participant       Event_has_Participant[]
   Participant_has_Competition Participant_has_Competition[]
+  Participant_has_Groups      Participant_has_Groups[]
 
   @@unique([idParticipant, Club_idClub])
 }
@@ -105,4 +107,33 @@ model User_has_Score {
   Score         Score @relation(fields: [Score_idScore], references: [idScore])
 
   @@id([User_iduser, Score_idScore])
+}
+
+model Participant_has_Groups {
+  Participant_idParticipant Int
+  Groups_idGroups           Int
+
+  Participant Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
+  Groups      Groups      @relation(fields: [Groups_idGroups], references: [idGroups])
+
+  @@id([Participant_idParticipant, Groups_idGroups])
+}
+
+model Groups {
+  idGroups        Int     @id @default(autoincrement())
+  GroupName       String?
+  GeneratedNumber Int?
+
+  Participants Participant_has_Groups[]
+  Event_has    Event_has_Groups[]
+}
+
+model Event_has_Groups {
+  Event_idEvent   Int
+  Groups_idGroups Int
+
+  Event  Event  @relation(fields: [Event_idEvent], references: [idEvent])
+  Groups Groups @relation(fields: [Groups_idGroups], references: [idGroups])
+
+  @@id([Event_idEvent, Groups_idGroups])
 }
