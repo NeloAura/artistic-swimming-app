@@ -78,6 +78,7 @@ function generateSecretCode(length = 8) {
 
   console.log(code);
   socket.emit('secretCode', code)
+  //
 
   return code;
 }
