@@ -35,13 +35,53 @@ import {
 } from '@chakra-ui/react'
 import { InfoOutlineIcon, AddIcon, HamburgerIcon, ViewIcon } from '@chakra-ui/icons'
 import { QRCodeGenerator } from './QRCodeGenerator'
-import {emit} from '../utils/socket_io.js';
+import {emit} from '../socket_io.js';
+import os from "os";
+import {socket} from "../socket_io"
 //constants
 
-
-
+const ip =  getIpAddress();
+const secret = generateSecretCode();
 
 //functions
+
+function getIpAddress() {
+  return new Promise((resolve, reject) => {
+    const ifaces = os.networkInterfaces();
+    let ipAddress;
+
+    Object.keys(ifaces).forEach(ifname => {
+      ifaces[ifname].forEach(iface => {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          ipAddress = iface.address;
+        }
+      });
+    });
+
+    if (ipAddress) {
+      resolve(ipAddress);
+    } else {
+      reject(new Error('Unable to retrieve IP address'));
+    }
+  });
+}
+
+function generateSecretCode(length = 8) {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters[randomIndex];
+  }
+
+  console.log(code);
+  socket.emit('secretCode', code)
+
+  return code;
+}
+
 
 // Register a new user with their username and password
 async function register(name, username, password, role) {
@@ -444,7 +484,7 @@ function ImagePopover(button) {
           <PopoverCloseButton />
           <PopoverHeader>QR Code</PopoverHeader>
           <PopoverBody>
-          <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
+          <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" ipAddress={ip} secretCode={secret} />
           </PopoverBody>
         </PopoverContent>
       </Popover>

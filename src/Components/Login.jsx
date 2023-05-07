@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import adminAvatar from '../assets/images/BBS.jpg';
-import { emit } from '../utils/socket_io.js';
+import { emit } from '../socket_io.js';
 
 //functions
 async function authenticate(username, password) {

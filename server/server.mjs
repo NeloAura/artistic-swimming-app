@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import {Server} from 'socket.io';
 import wifi from 'node-wifi';
+import cors from 'cors';
 import os from 'os';
 import{ PrismaClient } from '@prisma/client';
 
@@ -14,7 +15,11 @@ const app = express();
 const httpServer = http.createServer(app);
 const PORT = 3001;
 const prisma = new PrismaClient();
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3001"
+  }
+});
 
 // functions
 
@@ -132,6 +137,10 @@ io.on("connection", (socket) => {
 wifi.init({
   iface: null // network interface, choose a random wifi interface if set to null
 });
+
+// app uses
+
+app.use(cors());
 
 wifi.scan((error, networks) => {
   if (error) {

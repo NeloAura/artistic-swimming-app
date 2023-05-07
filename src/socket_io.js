@@ -5,7 +5,9 @@ const PROTOCOL = "http:";
 const DOMAIN = getIpAddress();
 const PORT = ":3001";
 
-const socket = io(`${PROTOCOL}//${DOMAIN}${PORT}`);
+const URL = process.env.NODE_ENV === 'production' ? undefined : `${PROTOCOL}//${DOMAIN}${PORT}`;
+
+const socket = io(URL);
 
 function getIpAddress() {
   return new Promise((resolve, reject) => {
@@ -50,4 +52,4 @@ function on(eventName, callback) {
   });
 }
 
-export { emit, on };
+export { emit, on , socket};
