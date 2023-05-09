@@ -10,6 +10,7 @@ import{ PrismaClient } from '@prisma/client';
 
 
 
+
 // constants
 const app = express();
 const httpServer = http.createServer(app);
@@ -17,7 +18,7 @@ const PORT = 3001;
 const prisma = new PrismaClient();
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3001"
+    origin: "http://localhost:3000"
   }
 });
 
@@ -44,16 +45,31 @@ function getIpAddress() {
   });
 }
 
+function generateSecretCode(length = 8) {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters[randomIndex];
+    console.log(code);
+  }
+
+
+  return code;
+}
+
 async function createDefaultUser() {
-  const adminUser = await prisma.user.findUnique({ where: { iduser: 1 } });
+  const adminUser = await prisma.user.findUnique({ where: { id: 1 } });
   if (!adminUser) {
     const passwordHash = await bcrypt.hash('BandaBouSplash01!', 10);
     await prisma.user.create({
       data: {
-        Name: 'BBS Admin',
-        Username: 'admin',
-        Password: passwordHash,
-        Role: 'admin'
+        name: 'BBS Admin',
+        username: 'admin',
+        password: passwordHash,
+        role: 'admin'
       }
       
     });
@@ -62,13 +78,13 @@ async function createDefaultUser() {
    
 }
 
-io.on("connection", (socket) => {
-  console.log("A client has connected");
+const secretCode = generateSecretCode();
 
-  socket.on('secretCode', (secretCode) => {
-    console.log(`Received secret code: ${secretCode}`);
-    // Do something with the secret code
-  });
+io.on("connection", async (socket) => {
+  const ipAddress = await getIpAddress();
+  console.log("A client has connected");
+  socket.emit("ipAddress", ipAddress);
+  socket.emit("secretCode", secretCode);
   socket.on('authenticate', async ({ username, password }) => {
     try {
       // Find the user by their username
@@ -79,27 +95,25 @@ io.on("connection", (socket) => {
       }
 
       // Check if the password is correct
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
         throw 'Password is incorrect';
       }
-
-      // Generate a JWT token
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
-
-      // Send the token to the client
-      socket.emit('authenticated', { token });
+      
+      return socket.emit('status',"200");
 
     } catch (error) {
       console.error(error);
-      socket.emit('authenticationFailed', { message: 'Authentication failed' });
+      return socket.emit('status','401')
     }
   });
   socket.on('register-user', async ({ name, username, password, role }) => {
     try {
       // Check if the username already exists
-      const existingUser = await prisma.user.findUnique({ where: { username } });
+      const existingUser = await prisma.user.findUnique({ where: { username: username } })
+      
+
   
       if (existingUser) {
         throw 'Username is already taken';
@@ -113,20 +127,17 @@ io.on("connection", (socket) => {
         data: {
           name,
           username,
-          passwordHash,
+          password: passwordHash,
           role: role || 'judge', // set the role to "judge" if it's not provided
         },
       });
+
+      
   
-      // Generate a JWT token
-      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET);
-  
-      // Send the token to the client
-      socket.emit('registered', { token });
   
     } catch (error) {
       console.error(error);
-      socket.emit('registrationFailed', { message: 'Registration failed' });
+      
     }
   });
   
@@ -139,8 +150,14 @@ wifi.init({
 });
 
 // app uses
-
 app.use(cors());
+
+//app gets
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Hello world',
+  });
+});
 
 wifi.scan((error, networks) => {
   if (error) {
@@ -157,17 +174,17 @@ wifi.scan((error, networks) => {
         // Delay server startup for 20 seconds after Wi-Fi connection
         setTimeout(() => {
           httpServer.listen(PORT, async () => {
-            const ipAddress = await getIpAddress();
+           const ipAddress = await getIpAddress();
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
+            
             await createDefaultUser();
-          
+            
           });
-        }, 20000);
+        }, 10000);
       }
     });
   }
 });
-
 
 
 

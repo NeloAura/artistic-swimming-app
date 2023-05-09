@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import {
@@ -15,38 +15,34 @@ import {
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import adminAvatar from '../assets/images/BBS.jpg';
 import { emit } from '../socket_io.js';
-
+import { socket } from "../socket_io";
 //functions
 async function authenticate(username, password) {
-  return new Promise((resolve, reject) => {
-    emit('authenticate', { username, password }).then((response) => {
-      if (response.status === 200) {
-        resolve({ status: response.status, data: response.data });
-      } else {
-        reject({ status: response.status, data: response.data });
-      }
-    }).catch((error) => {
-      console.error(error);
-      reject({ status: error.status, data: error.message });
-    });
-  });
+  return emit('authenticate', { username, password });
 }
 
 const LoginComp = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  
+
+  useEffect(() => {
+    socket.on("status", (status) => {
+      if (status === "200") {
+        setAuthenticated(true);
+        console.log("Authentication succesfull")
+      }
+    });
+  }, []);
 
   const handleLogin = async () => {
     // Perform authentication check here
     // If authentication succeeds, set authenticated to true
     try {
-      const authResult = await authenticate(username, password);
-      console.log(authResult.status, authResult.data);
-
-      if (authResult.status === 200) {
-        setAuthenticated(true);
-      }
+      await authenticate(username, password);
+      
+      
     } catch (error) {
       console.error(error);
     }

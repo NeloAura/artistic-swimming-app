@@ -8,132 +8,84 @@ datasource db {
 }
 
 model Club {
-  idClub       Int           @id @default(autoincrement())
-  Name         String?
-  CellPhone    String?
-  Email        String?
-  Participants Participant[]
+  id       Int           @id @default(autoincrement())
+  name         String?
+  cellPhone    String?
+  email        String?
+  participants Participant[]
 }
 
 model Competition {
-  idcompetition               Int                           @id @default(autoincrement())
-  Name                        String                        @unique
-  Participants                Participant[]
-  Competition_has_User        Competition_has_User[]
-  Participant_has_Competition Participant_has_Competition[]
+  id               Int                           @id @default(autoincrement())
+  name                        String                        @unique
+  participants                Participant[]
+  users                       User[]
+  
 }
 
-model Competition_has_User {
-  Competition_idcompetition Int
-  User_iduser               Int
-  Competition               Competition @relation(fields: [Competition_idcompetition], references: [idcompetition])
-  User                      User        @relation(fields: [User_iduser], references: [iduser])
-
-  @@id([Competition_idcompetition, User_iduser])
-}
 
 model Event {
-  idEvent               Int                     @id @default(autoincrement())
-  Event                 String                  @unique
-  Event_has_Participant Event_has_Participant[]
-  Event_has_Groups      Event_has_Groups[]
+  id               Int                     @id @default(autoincrement())
+  event                 String                  @unique
+  participants          Participant[]
+  groups                Groups[]
+  scores                Score[]
 }
 
-model Event_has_Participant {
-  Event_idEvent             Int
-  Participant_idParticipant Int
-  Event                     Event       @relation(fields: [Event_idEvent], references: [idEvent])
-  Participant               Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
-
-  @@id([Event_idEvent, Participant_idParticipant])
-}
 
 model Participant {
-  idParticipant               Int                           @id @default(autoincrement())
-  LastName                    String?
-  FirstName                   String?
-  BirthYear                   DateTime?
-  Division                    String?
-  Age_Category                String?
+  id               Int                           @id @default(autoincrement())
+  clublink         Club       @relation(fields: [clublinkId], references: [id])
+  clublinkId         Int
+  lastName                    String?
+  firstName                   String?
+  birthYear                   DateTime?
+  division                    String?
+  age_category                String?
   Country                     String?
-  GeneratedNumber             Int?
-  Club                        Club                          @relation(fields: [Club_idClub], references: [idClub])
-  Club_idClub                 Int
-  Competitions                Competition[]
-  Scores                      Score[]
-  Event_has_Participant       Event_has_Participant[]
-  Participant_has_Competition Participant_has_Competition[]
-  Participant_has_Groups      Participant_has_Groups[]
-
-  @@unique([idParticipant, Club_idClub])
+  generatedNumber             Int?
+  competitions                Competition[]
+  events                      Event[]
+  groups                      Groups[]
+  
+  @@unique([id])
 }
 
-model Participant_has_Competition {
-  Participant_idParticipant Int
-  Competition_idcompetition Int
-  Participant               Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
-  Competition               Competition @relation(fields: [Competition_idcompetition], references: [idcompetition])
-
-  @@id([Participant_idParticipant, Competition_idcompetition])
-}
 
 model Score {
-  idScore                   Int              @id @default(autoincrement())
-  Execution                 Float?
-  Difficulty                Float?
-  ArtisticExpression        Float?
-  ArtisticImpression        Float?
-  Total                     Float?
-  Participant               Participant      @relation(fields: [Participant_idParticipant, Club_idClub], references: [idParticipant, Club_idClub])
-  Participant_idParticipant Int
-  Club_idClub               Int
-  User_has_Score            User_has_Score[]
+  id                        Int              @id @default(autoincrement())
+  eventlink                 Event       @relation(fields: [eventlinkId], references: [id])
+  eventlinkId               Int
+  execution                 Float?
+  difficulty                Float?
+  artisticExpression        Float?
+  artisticImpression        Float?
+  total                     Float?
+  users                     User[]
+
+
+
+  
 }
 
 model User {
-  iduser               Int                    @id @default(autoincrement())
-  Name                 String
-  Username             String?
-  Password             String?
-  Role                 String?
-  User_has_Score       User_has_Score[]
-  Competition_has_User Competition_has_User[]
-}
-
-model User_has_Score {
-  User_iduser   Int
-  Score_idScore Int
-  User          User  @relation(fields: [User_iduser], references: [iduser])
-  Score         Score @relation(fields: [Score_idScore], references: [idScore])
-
-  @@id([User_iduser, Score_idScore])
-}
-
-model Participant_has_Groups {
-  Participant_idParticipant Int
-  Groups_idGroups           Int
-
-  Participant Participant @relation(fields: [Participant_idParticipant], references: [idParticipant])
-  Groups      Groups      @relation(fields: [Groups_idGroups], references: [idGroups])
-
-  @@id([Participant_idParticipant, Groups_idGroups])
+  id                   Int                    @id @default(autoincrement())
+  name                 String?
+  username             String?                @unique
+  password             String?
+  role                 String?
+  competitions         Competition[]
+  scores               Score[]
+  
 }
 
 model Groups {
-  idGroups        Int     @id @default(autoincrement())
-  GroupName       String?
-  GeneratedNumber Int?
+  id        Int     @id @default(autoincrement())
+  groupName       String?
+  generatedNumber Int?
+  events          Event[]
+  participants    Participant[]
 
-  Participants Participant_has_Groups[]
-  Event_has    Event_has_Groups[]
 }
 
-model Event_has_Groups {
-  Event_idEvent   Int
-  Groups_idGroups Int
 
-  Event  Event  @relation(fields: [Event_idEvent], references: [idEvent])
-  Groups Groups @relation(fields: [Groups_idGroups], references: [idGroups])
-
-  @@id([Event_idEvent, Groups_idGroups])
-}

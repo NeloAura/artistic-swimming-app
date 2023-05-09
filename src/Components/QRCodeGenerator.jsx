@@ -1,6 +1,7 @@
 import { Image,Box, Center, Heading } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import qrcode from "qrcode";
+import { socket } from "../socket_io";
 
 
 
@@ -8,11 +9,23 @@ import qrcode from "qrcode";
 
 
 
-
-export function QRCodeGenerator({ ssid, password , ipAddress , secretCode }) {
+export function QRCodeGenerator({ ssid, password  }) {
   const [qrCodeDataURL, setQRCodeDataURL] = useState("");
- 
+  const [ipAddress, setIpAddress] = useState("");
+  const [secretCode, setSecretCode] = useState("");
   
+
+  useEffect(() => {
+    socket.on("ipAddress", (ipAddress) => {
+      setIpAddress(ipAddress);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on("secretCode", (secretCode) => {
+      setSecretCode(secretCode);
+    });
+  }, []);
 
   useEffect(() => {
     const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};;T:IP;P:${ipAddress};;T:SECRET;P:${secretCode};;`;

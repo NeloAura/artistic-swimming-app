@@ -1,48 +1,37 @@
 import io from "socket.io-client";
-import os from "os";
+// import os from "os";
 
 const PROTOCOL = "http:";
-const DOMAIN = getIpAddress();
+const DOMAIN = "localhost";
 const PORT = ":3001";
 
-const URL = process.env.NODE_ENV === 'production' ? undefined : `${PROTOCOL}//${DOMAIN}${PORT}`;
+const URL = `${PROTOCOL}//${DOMAIN}${PORT}`;
+// process.env.NODE_ENV === 'production' ? undefined :
+const socket = io.connect(URL);
 
-const socket = io(URL);
+// function getIpAddress() {
+//   return new Promise((resolve, reject) => {
+//     const ifaces = os.networkInterfaces();
+//     let ipAddress;
 
-function getIpAddress() {
-  return new Promise((resolve, reject) => {
-    const ifaces = os.networkInterfaces();
-    let ipAddress;
+//     Object.keys(ifaces).forEach(ifname => {
+//       ifaces[ifname].forEach(iface => {
+//         if (iface.family === 'IPv4' && !iface.internal) {
+//           ipAddress = iface.address;
+//         }
+//       });
+//     });
 
-    Object.keys(ifaces).forEach(ifname => {
-      ifaces[ifname].forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          ipAddress = iface.address;
-        }
-      });
-    });
-
-    if (ipAddress) {
-      resolve(ipAddress);
-    } else {
-      reject(new Error('Unable to retrieve IP address'));
-    }
-  });
-}
+//     if (ipAddress) {
+//       resolve(ipAddress);
+//     } else {
+//       reject(new Error('Unable to retrieve IP address'));
+//     }
+//   });
+// }
 
 function emit(eventName, data) {
-  return new Promise((resolve, reject) => {
-    socket.emit(eventName, data, (response) => {
-      console.log(response.status);
-      console.log(response.data);
-      if (response.error) {
-        console.error(response.error);
-        reject({ status: response.status, data: response.error });
-      } else {
-        resolve({ status: response.status, data: response.data });
-      }
-    });
-  });
+    socket.emit(eventName, data);
 }
 
 function on(eventName, callback) {
