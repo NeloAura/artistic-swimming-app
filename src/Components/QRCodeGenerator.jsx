@@ -16,12 +16,15 @@ export function QRCodeGenerator({ ssid, password  }) {
   
 
   useEffect(() => {
+    socket.emit("ipAddress-r")
     socket.on("ipAddress", (ipAddress) => {
       setIpAddress(ipAddress);
+      console.log(`ip: ${ipAddress}`)
     });
   }, []);
 
   useEffect(() => {
+    socket.emit("secretCode-r")
     socket.on("secretCode", (secretCode) => {
       setSecretCode(secretCode);
     });
@@ -41,6 +44,7 @@ export function QRCodeGenerator({ ssid, password  }) {
     <Heading mb={4}>Connect to ASA</Heading>
     <Image
       src={qrCodeDataURL}
+
       alt="WiFi QR code"
       boxSize="300px"
       objectFit="contain"

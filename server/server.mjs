@@ -108,6 +108,33 @@ io.on("connection", async (socket) => {
       return socket.emit('status','401')
     }
   });
+  socket.on('authenticate-j', async ({ username, password, secret }) => {
+    try {
+      // Find the user by their username
+      const user = await prisma.user.findUnique({ where: { username } });
+
+      if (!user) {
+        throw 'User not found';
+      }
+
+      // Check if the password is correct
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        throw 'Password is incorrect';
+      }
+
+      if(secret=! secretCode){
+        throw 'Try scanning the new QR-Code';
+      }
+      
+      return socket.emit('status',"200");
+
+    } catch (error) {
+      console.error(error);
+      return socket.emit('status','401')
+    }
+  });
   socket.on('register-user', async ({ name, username, password, role }) => {
     try {
       // Check if the username already exists
@@ -140,8 +167,10 @@ io.on("connection", async (socket) => {
       
     }
   });
-  
+  socket.on('ipAddress-r', ()=>{socket.emit("ipAddress", ipAddress);})
+  socket.on('secretCode-r', ()=>{socket.emit("secretCode", secretCode);})
 });
+
 
 
 // wifi setup
