@@ -1,15 +1,12 @@
 // import libraries
-import http from 'http';
-import bcrypt from 'bcryptjs';
-import express from 'express';
-import {Server} from 'socket.io';
-import wifi from 'node-wifi';
-import cors from 'cors';
-import os from 'os';
-import{ PrismaClient } from '@prisma/client';
-
-
-
+import http from "http";
+import bcrypt from "bcryptjs";
+import express from "express";
+import { Server } from "socket.io";
+import wifi from "node-wifi";
+import cors from "cors";
+import os from "os";
+import { PrismaClient } from "@prisma/client";
 
 // constants
 const app = express();
@@ -18,8 +15,8 @@ const PORT = 3001;
 const prisma = new PrismaClient();
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000"
-  }
+    origin: "http://localhost:3000",
+  },
 });
 
 // functions
@@ -29,9 +26,9 @@ function getIpAddress() {
     const ifaces = os.networkInterfaces();
     let ipAddress;
 
-    Object.keys(ifaces).forEach(ifname => {
-      ifaces[ifname].forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal) {
+    Object.keys(ifaces).forEach((ifname) => {
+      ifaces[ifname].forEach((iface) => {
+        if (iface.family === "IPv4" && !iface.internal) {
           ipAddress = iface.address;
         }
       });
@@ -40,7 +37,7 @@ function getIpAddress() {
     if (ipAddress) {
       resolve(ipAddress);
     } else {
-      reject(new Error('Unable to retrieve IP address'));
+      reject(new Error("Unable to retrieve IP address"));
     }
   });
 }
@@ -56,26 +53,22 @@ function generateSecretCode(length = 8) {
     console.log(code);
   }
 
-
   return code;
 }
 
 async function createDefaultUser() {
   const adminUser = await prisma.user.findUnique({ where: { id: 1 } });
   if (!adminUser) {
-    const passwordHash = await bcrypt.hash('BandaBouSplash01!', 10);
+    const passwordHash = await bcrypt.hash("BandaBouSplash01!", 10);
     await prisma.user.create({
       data: {
-        name: 'BBS Admin',
-        username: 'admin',
+        name: "BBS Admin",
+        username: "admin",
         password: passwordHash,
-        role: 'admin'
-      }
-      
+        role: "admin",
+      },
     });
-    
   }
-   
 }
 
 const secretCode = generateSecretCode();
@@ -85,106 +78,101 @@ io.on("connection", async (socket) => {
   console.log("A client has connected");
   socket.emit("ipAddress", ipAddress);
   socket.emit("secretCode", secretCode);
-  socket.on('authenticate', async ({ username, password }) => {
+  socket.on("authenticate", async ({ username, password }) => {
     try {
       // Find the user by their username
       const user = await prisma.user.findUnique({ where: { username } });
 
       if (!user) {
-        throw 'User not found';
+        throw "User not found";
       }
 
       // Check if the password is correct
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
-        throw 'Password is incorrect';
+        throw "Password is incorrect";
       }
-      
-      return socket.emit('status',"200");
 
+      return socket.emit("status", "200");
     } catch (error) {
       console.error(error);
-      return socket.emit('status','401')
+      return socket.emit("status", "401");
     }
   });
-  socket.on('authenticate-j', async ({ username, password, secret }) => {
+  socket.on("authenticate-j", async ({ username, password, secret }) => {
     try {
       // Find the user by their username
       const user = await prisma.user.findUnique({ where: { username } });
 
       if (!user) {
-        throw 'User not found';
+        throw "User not found";
       }
 
       // Check if the password is correct
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
-        throw 'Password is incorrect';
+        throw "Password is incorrect";
       }
 
-      if(secret=! secretCode){
-        throw 'Try scanning the new QR-Code';
+      if ((secret = !secretCode)) {
+        throw "Try scanning the new QR-Code";
       }
-      
-      return socket.emit('status',"200");
 
+      return socket.emit("status", "200");
     } catch (error) {
       console.error(error);
-      return socket.emit('status','401')
+      return socket.emit("status", "401");
     }
   });
-  socket.on('register-user', async ({ name, username, password, role }) => {
+  socket.on("register-user", async ({ name, username, password, role }) => {
     try {
       // Check if the username already exists
-      const existingUser = await prisma.user.findUnique({ where: { username: username } })
-      
+      const existingUser = await prisma.user.findUnique({
+        where: { username: username },
+      });
 
-  
       if (existingUser) {
-        throw 'Username is already taken';
+        throw "Username is already taken";
       }
-  
+
       // Hash the password
       const passwordHash = await bcrypt.hash(password, 10);
-  
+
       // Create the new user
       const newUser = await prisma.user.create({
         data: {
           name,
           username,
           password: passwordHash,
-          role: role || 'judge', // set the role to "judge" if it's not provided
+          role: role || "judge", // set the role to "judge" if it's not provided
         },
       });
-
-      
-  
-  
     } catch (error) {
       console.error(error);
-      
     }
   });
-  socket.on('ipAddress-r', ()=>{socket.emit("ipAddress", ipAddress);})
-  socket.on('secretCode-r', ()=>{socket.emit("secretCode", secretCode);})
+  socket.on("ipAddress-r", () => {
+    socket.emit("ipAddress", ipAddress);
+  });
+  socket.on("secretCode-r", () => {
+    socket.emit("secretCode", secretCode);
+  });
 });
-
-
 
 // wifi setup
 wifi.init({
-  iface: null // network interface, choose a random wifi interface if set to null
+  iface: null, // network interface, choose a random wifi interface if set to null
 });
 
 // app uses
 app.use(cors());
 
 //app gets
-app.get('/api', (req, res) => {
+app.get("/api", (req, res) => {
   res.json({
-    message: 'Hello world',
+    message: "Hello world",
   });
 });
 
@@ -192,28 +180,24 @@ wifi.scan((error, networks) => {
   if (error) {
     console.log(error);
   } else {
-    console.log('Available networks:', networks);
+    console.log("Available networks:", networks);
 
-    wifi.connect({ ssid: 'BBS', password: 'BandaBouSplash01!' }, (error) => {
+    wifi.connect({ ssid: "jansofat7", password: "kevinnicole" }, (error) => {
       if (error) {
         console.log(error);
       } else {
-        console.log('Connected to Wi-Fi network');
+        console.log("Connected to Wi-Fi network");
 
         // Delay server startup for 20 seconds after Wi-Fi connection
         setTimeout(() => {
           httpServer.listen(PORT, async () => {
-           const ipAddress = await getIpAddress();
+            const ipAddress = await getIpAddress();
             console.log(`Server listening at http://${ipAddress}:${PORT}`);
-            
+
             await createDefaultUser();
-            
           });
         }, 10000);
       }
     });
   }
 });
-
-
-
