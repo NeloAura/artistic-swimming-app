@@ -45,19 +45,22 @@ import {
   ViewIcon,
 } from "@chakra-ui/icons";
 import { QRCodeGenerator } from "./QRCodeGenerator";
-import {emit} from "../socket_io";
+import { emit } from "../socket_io";
 //constants
 
-
 //functions
-
 
 // Register a new user with their username and password
 async function register(name, username, password, role) {
   try {
-    const result = await emit("register-user", { name, username, password, role });
+    const result = await emit("register-user", {
+      name,
+      username,
+      password,
+      role,
+    });
     console.log("Registration successful:", result);
-    
+
     return result;
   } catch (error) {
     console.error("Registration failed:", error);
@@ -103,11 +106,8 @@ function WalkthroughPopover(button) {
 function UserDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const firstField = React.useRef();
-  
-
 
   const handleSubmit = async (event) => {
-    
     event.preventDefault();
     const name = document.getElementById("name").value;
     const username = document.getElementById("username").value;
@@ -115,13 +115,12 @@ function UserDrawer() {
     const role = document.getElementById("role").value;
 
     try {
-      const result = await register(name, username, password, role)
-  .then(onClose());
- 
-     console.log("Registration successful:", result);
-     
+      const result = await register(name, username, password, role).then(
+        onClose()
+      );
+
+      console.log("Registration successful:", result);
     } catch (error) {
-      
       console.error("Failed to register user:", error);
     }
   };
@@ -501,10 +500,7 @@ function ImagePopover(button) {
         <PopoverCloseButton />
         <PopoverHeader>QR Code</PopoverHeader>
         <PopoverBody>
-          <QRCodeGenerator
-            ssid="BBS"
-            password="BandaBouSplash01!"
-          />
+          <QRCodeGenerator ssid="jansofat7" password="kevinnicole" />
         </PopoverBody>
       </PopoverContent>
     </Popover>

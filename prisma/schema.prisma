@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Club {
-  id       Int           @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String?
   cellPhone    String?
   email        String?
@@ -16,76 +16,64 @@ model Club {
 }
 
 model Competition {
-  id               Int                           @id @default(autoincrement())
-  name                        String                        @unique
-  participants                Participant[]
-  users                       User[]
-  
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  participants Participant[]
+  users        User[]
 }
-
 
 model Event {
-  id               Int                     @id @default(autoincrement())
-  event                 String                  @unique
-  participants          Participant[]
-  groups                Groups[]
-  scores                Score[]
+  id           Int           @id @default(autoincrement())
+  event        String        @unique
+  participants Participant[]
+  groups       Groups[]
+  scores       Score[]
 }
 
-
 model Participant {
-  id               Int                           @id @default(autoincrement())
-  clublink         Club       @relation(fields: [clublinkId], references: [id])
-  clublinkId         Int
-  lastName                    String?
-  firstName                   String?
-  birthYear                   DateTime?
-  division                    String?
-  age_category                String?
-  Country                     String?
-  generatedNumber             Int?
-  competitions                Competition[]
-  events                      Event[]
-  groups                      Groups[]
-  
+  id              Int           @id @default(autoincrement())
+  clublink        Club          @relation(fields: [clublinkId], references: [id])
+  clublinkId      Int
+  lastName        String?
+  firstName       String?
+  birthYear       DateTime?
+  division        String?
+  age_category    String?
+  Country         String?
+  generatedNumber Int?
+  competitions    Competition[]
+  events          Event[]
+  groups          Groups[]
+
   @@unique([id])
 }
 
-
 model Score {
-  id                        Int              @id @default(autoincrement())
-  eventlink                 Event       @relation(fields: [eventlinkId], references: [id])
-  eventlinkId               Int
-  execution                 Float?
-  difficulty                Float?
-  artisticExpression        Float?
-  artisticImpression        Float?
-  total                     Float?
-  users                     User[]
-
-
-
-  
+  id                 Int    @id @default(autoincrement())
+  eventlink          Event  @relation(fields: [eventlinkId], references: [id])
+  eventlinkId        Int
+  execution          Float?
+  difficulty         Float?
+  artisticExpression Float?
+  artisticImpression Float?
+  total              Float?
+  users              User[]
 }
 
 model User {
-  id                   Int                    @id @default(autoincrement())
-  name                 String?
-  username             String?                @unique
-  password             String?
-  role                 String?
-  competitions         Competition[]
-  scores               Score[]
-  
+  id           Int           @id @unique @default(autoincrement())
+  name         String?
+  username     String?       @unique
+  password     String?
+  role         String?
+  competitions Competition[]
+  scores       Score[]
 }
 
 model Groups {
-  id        Int     @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   groupName       String?
   generatedNumber Int?
   events          Event[]
   participants    Participant[]
-
 }
-
-
