@@ -10,15 +10,20 @@ import {
   Badge,
   Button
 } from '@chakra-ui/react'
-import { AtSignIcon } from '@chakra-ui/icons'
+import { SunIcon } from '@chakra-ui/icons'
+import NavigationComp from './Navigation'
+
 //link : https://chakra-ui.com/docs/components/card/usage
 
 const ParticipantCard = () => (
     <ChakraProvider resetCSS>
+    <nav>
+    <NavigationComp/>
+    </nav>
     <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(200px, 1fr))'>
 <Card>
     <CardHeader>
-     <AtSignIcon boxSize={8} color='blue.200' />
+     <SunIcon boxSize={8} color='blue.200' />
     </CardHeader>
     <CardBody>
     <Badge colorScheme='purple'>Participant</Badge>
@@ -35,7 +40,7 @@ const ParticipantCard = () => (
 </Card>
 <Card>
     <CardHeader>
-     <AtSignIcon boxSize={8} color='blue.200' />
+     <SunIcon boxSize={8} color='blue.200' />
     </CardHeader>
     <CardBody>
     <Badge colorScheme='pink'>Group</Badge>
@@ -52,7 +57,7 @@ const ParticipantCard = () => (
 </Card>
 <Card>
     <CardHeader>
-     <AtSignIcon boxSize={8} color='blue.200' />
+     <SunIcon boxSize={8} color='blue.200' />
     </CardHeader>
     <CardBody>
     <Badge colorScheme='purple'>Participant</Badge>

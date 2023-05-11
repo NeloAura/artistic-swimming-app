@@ -48,8 +48,10 @@ const LoginComp = () => {
     }
   };
 
+  
+
   if (authenticated) {
-    return <Navigate to="/event" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return (

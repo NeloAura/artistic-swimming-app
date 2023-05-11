@@ -182,7 +182,7 @@ wifi.scan((error, networks) => {
   } else {
     console.log("Available networks:", networks);
 
-    wifi.connect({ ssid: "jansofat7", password: "kevinnicole" }, (error) => {
+    wifi.connect({ ssid: "BBS", password: "BandaBouSplash01!" }, (error) => {
       if (error) {
         console.log(error);
       } else {

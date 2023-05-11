@@ -1,4 +1,6 @@
-import React from "react";
+
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   ChakraProvider,
   useDisclosure,
@@ -46,11 +48,13 @@ import {
 } from "@chakra-ui/icons";
 import { QRCodeGenerator } from "./QRCodeGenerator";
 import { emit } from "../socket_io";
+
 //constants
 
 //functions
 
 // Register a new user with their username and password
+
 async function register(name, username, password, role) {
   try {
     const result = await emit("register-user", {
@@ -67,6 +71,9 @@ async function register(name, username, password, role) {
     throw new Error("Registration failed");
   }
 }
+
+
+
 
 function WalkthroughPopover(button) {
   const initialFocusRef = React.useRef();
@@ -500,14 +507,48 @@ function ImagePopover(button) {
         <PopoverCloseButton />
         <PopoverHeader>QR Code</PopoverHeader>
         <PopoverBody>
-          <QRCodeGenerator ssid="jansofat7" password="kevinnicole" />
+          <QRCodeGenerator ssid="BBS" password="BandaBouSplash01!" />
         </PopoverBody>
       </PopoverContent>
     </Popover>
   );
 }
 
-const Navigation = () => (
+
+
+const Navigation = () => {
+
+
+  const navigateToDashboard =  () => {
+    return <Navigate to="/dashboard" />;
+  };
+  
+  const navigateToParticipant = () => {
+    return <Navigate to="/participant" />;
+  };
+  
+  const navigateToJudge = () => {
+    return <Navigate to="/judge" />;
+  };
+  
+  const navigateToClub = () => {
+    return <Navigate to="/club" />;
+  };
+  
+
+return(
+  <ChakraProvider resetCSS>
+  <Box
+      display="flex"
+      overflow="visible"
+      minWidth="100%"
+      minHeight={75}
+      flexDirection="row"
+      alignItems="stretch"
+      justifyContent="flex-start"
+      backgroundColor="red.500"
+    >
+ 
   <List
     styleType="square"
     display="flex"
@@ -557,6 +598,7 @@ const Navigation = () => (
       width={40}
       mt={1}
       alignItems="center"
+      onClick={navigateToDashboard}
     >
       Dashboard
     </Button>
@@ -578,6 +620,7 @@ const Navigation = () => (
       width={40}
       mt={1}
       alignItems="center"
+      onClick={navigateToParticipant}
     >
       Participants
     </Button>
@@ -599,10 +642,13 @@ const Navigation = () => (
       width={40}
       mt={1}
       alignItems="center"
+      onClick={navigateToJudge}
     >
       Judges
     </Button>
     <Button
+      onClick={() => navigateToDashboard}
+      on
       variant="link"
       size="md"
       ml={3}
@@ -656,23 +702,12 @@ const Navigation = () => (
       <AvatarBadge bg="green.500" boxSize="1.25rem" borderColor="white" />
     </Avatar>
   </List>
-);
-
-const NavigationComp = () => (
-  <ChakraProvider resetCSS>
-    <Box
-      display="flex"
-      overflow="visible"
-      minWidth="100%"
-      minHeight={75}
-      flexDirection="row"
-      alignItems="stretch"
-      justifyContent="flex-start"
-      backgroundColor="red.500"
-    >
-      <Navigation />
-    </Box>
+  </Box>
   </ChakraProvider>
-);
 
-export default NavigationComp;
+ );
+    };
+
+
+
+export default Navigation;

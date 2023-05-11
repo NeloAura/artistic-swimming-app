@@ -15,13 +15,12 @@ import NavigationComp from './Navigation'
 
 //link : https://chakra-ui.com/docs/components/card/usage
 
-const JudgeCard = () => (
-
+const ClubCard = () => (
     <ChakraProvider resetCSS>
     <nav>
     <NavigationComp/>
     </nav>
-      <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(200px, 1fr))'>
+    <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(200px, 1fr))'>
 
 
 <Card>
@@ -29,12 +28,12 @@ const JudgeCard = () => (
      <SunIcon boxSize={8} color='blue.300' />
     </CardHeader>
     <CardBody>
-    <Badge colorScheme='purple'>Judge</Badge>
+    <Badge colorScheme='red'>Club</Badge>
      <br />
-      <Text as='b' >Jonathan</Text>
+      <Text as='b' >Los Vengadores</Text>
       <br />
       <Badge variant='solid' colorScheme='blue'>
-    Type : artistic expression
+    Colombia
   </Badge>
     </CardBody>
     <CardFooter alignItems="center" justifyContent="center">
@@ -46,12 +45,12 @@ const JudgeCard = () => (
      <SunIcon boxSize={8} color='blue.300' />
     </CardHeader>
     <CardBody>
-    <Badge colorScheme='purple'>Judge</Badge>
+    <Badge colorScheme='red'>Club</Badge>
      <br />
-      <Text as='b' >Jeanello</Text>
+      <Text as='b' >Stakamahachi</Text>
       <br />
       <Badge variant='solid' colorScheme='blue'>
-    Type : difficulty
+    Curacao
   </Badge>
     </CardBody>
     <CardFooter alignItems="center" justifyContent="center">
@@ -63,12 +62,12 @@ const JudgeCard = () => (
      <SunIcon boxSize={8} color='blue.300' />
     </CardHeader>
     <CardBody>
-    <Badge colorScheme='purple'>Judge</Badge>
+    <Badge colorScheme='red'>Club</Badge>
      <br />
-      <Text as='b' >Kevin</Text>
+      <Text as='b' >The Goldens</Text>
       <br />
       <Badge variant='solid' colorScheme='blue'>
-    Type : execution
+    USA
   </Badge>
     </CardBody>
     <CardFooter alignItems="center" justifyContent="center">
@@ -80,4 +79,4 @@ const JudgeCard = () => (
     </ChakraProvider>
   )
   
-  export default JudgeCard
+  export default ClubCard

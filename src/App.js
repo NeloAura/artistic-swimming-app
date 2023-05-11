@@ -3,8 +3,10 @@ import React from 'react';
 import { Routes, Route } from "react-router-dom"
 //import components here  
 import Login from './Components/Login';
-import EventCard from './Components/EventCard';
-
+import JudgeCard from './Components/JudgeCard';
+import ParticipantCard from './Components/ParticipantCard';
+import Dashboard from './Components/Dashboard';
+import ClubCard from './Components/ClubCard';
 
 
 
@@ -13,8 +15,10 @@ function App() {
     <div className="App">
       <Routes>
         <Route path="/" element={ <Login/> } />
-        <Route path="/event" element={ <EventCard/> } />
-        
+        <Route path="/dashboard" element={ <Dashboard/> } />
+        <Route path="/judge" element={ <JudgeCard/> } />
+        <Route path="/participant" element={ <ParticipantCard/> } />
+        <Route path="/club" element={ <ClubCard/> } />
       </Routes>
     </div>
   )
