@@ -3,7 +3,6 @@ import React from 'react';
 import { Routes, Route } from "react-router-dom"
 //import components here  
 import Login from './Components/Login';
-
 import EventCard from './Components/EventCard';
 
 
