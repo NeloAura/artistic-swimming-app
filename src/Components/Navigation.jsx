@@ -71,6 +71,20 @@ async function register(name, username, password, role) {
     throw new Error("Registration failed");
   }
 }
+async function registerclub(name, cellPhone, email) {
+  try {
+    const result = await emit("register-club", {
+      name,
+      cellPhone,
+      email,
+    });
+    console.log(" Club Registration successful:",result);
+    return result;
+  } catch (error) {
+    console.error("Registration failed:", error);
+    throw new Error("Registration failed");
+  }
+}
 
 
 
@@ -127,6 +141,7 @@ function UserDrawer() {
       );
 
       console.log("Registration successful:", result);
+      return result;
     } catch (error) {
       console.error("Failed to register user:", error);
     }
@@ -402,7 +417,24 @@ function ParticipantDrawer() {
 function ClubDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const firstField = React.useRef();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const name = document.getElementById("name").value;
+    const cellPhone = document.getElementById("cellPhone").value;
+    const email = document.getElementById("email").value;
+    
 
+    try {
+      const result = await registerclub(name, cellPhone, email).then(
+        onClose()
+      );
+
+      console.log("Registration successful:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed to register user:", error);
+    }
+  };
   return (
     <>
       <Button colorScheme="blue" onClick={onOpen}>
@@ -422,6 +454,7 @@ function ClubDrawer() {
           </DrawerHeader>
 
           <DrawerBody>
+          <form onSubmit={handleSubmit}>
             <Stack spacing="24px">
               <Box>
                 <FormLabel htmlFor="name">Name</FormLabel>
@@ -433,7 +466,7 @@ function ClubDrawer() {
                 <FormLabel htmlFor="Cell-phone">Cell-Phone</FormLabel>
                 <InputGroup>
                   <InputLeftAddon children="+5999" />
-                  <Input type="tel" placeholder="phone number" />
+                  <Input type="tel" placeholder="phone number"  id ="cellPhone" />
                 </InputGroup>
                 <FormLabel htmlFor="email">Email</FormLabel>
                 <Input
@@ -442,22 +475,17 @@ function ClubDrawer() {
                   placeholder="Please enter email"
                 />
               </Box>
-
-              <Box>
-                <FormLabel htmlFor="role">Select Role</FormLabel>
-                <Select id="role" defaultValue="Stakamahachi">
-                  <option value="admin">Admin</option>
-                  <option value="judge">Jugde</option>
-                </Select>
-              </Box>
             </Stack>
+            <Button mt={4} colorScheme="blue" type="submit">Submit</Button>
+            </form>
           </DrawerBody>
 
           <DrawerFooter borderTopWidth="1px">
             <Button variant="outline" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button colorScheme="blue">Submit</Button>
+            
+            
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -517,7 +545,6 @@ function ImagePopover(button) {
 
 
 const Navigation = () => {
-
 
   const navigateToDashboard =  () => {
     return <Navigate to="/dashboard" />;
@@ -647,8 +674,7 @@ return(
       Judges
     </Button>
     <Button
-      onClick={() => navigateToDashboard}
-      on
+      onClick={() => navigateToClub}
       variant="link"
       size="md"
       ml={3}

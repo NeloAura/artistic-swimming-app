@@ -153,8 +153,35 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
+  socket.on("register-club", async ({ name, cellPhone, email}) => {
+    try {
+      // Check if the username already exists
+      const existingClub = await prisma.club.findUnique({
+        where: { name: name },
+      });
+
+      if (existingClub) {
+        throw "Club Already exists";
+      }
+
+      // Hash the password
+      
+
+      // Create the new user
+      const newClub = await prisma.club.create({
+        data: {
+          name,
+          cellPhone,
+          email,
+           // set the role to "judge" if it's not provided
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  });
   socket.on("ipAddress-r", () => {
-    socket.emit("ipAddress", ipAddress);
+  socket.emit("ipAddress", ipAddress);
   });
   socket.on("secretCode-r", () => {
     socket.emit("secretCode", secretCode);
