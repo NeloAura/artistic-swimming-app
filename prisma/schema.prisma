@@ -68,6 +68,7 @@ model User {
   role         String?
   competitions Competition[]
   scores       Score[]
+  configurations Configuration[]
 }
 
 model Groups {
@@ -76,4 +77,12 @@ model Groups {
   generatedNumber Int?
   events          Event[]
   participants    Participant[]
+}
+
+model Configuration {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  value        String?
+  user         User          @relation(fields: [userId], references: [id])
+  userId       Int
 }
