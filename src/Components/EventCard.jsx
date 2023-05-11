@@ -28,7 +28,8 @@ import { ViewIcon,EditIcon, DeleteIcon, DownloadIcon } from '@chakra-ui/icons'
 import EventImage from '../assets/images/event.png'
 import NavigationComp from './Navigation'
 import AssignEventComp from './AssignEvent'
-
+import JudgeCard from './JudgeCard'
+import ParticipantCard from './ParticipantCard'
 
 function DeletePopover(button) {
   const initialFocusRef = React.useRef()
@@ -74,7 +75,7 @@ const EventCard = () => (
   <nav>
   <NavigationComp/>
   </nav>
-    <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(400px, 1fr))'>
+  <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(400px, 1fr))'>
 <Card maxW='lg' bg='twitter.300' margin={1}>
   <CardHeader>
     <Flex spacing='4'>
@@ -200,6 +201,8 @@ const EventCard = () => (
 
     <AssignEventComp/>
 
+    <JudgeCard/>
+    <ParticipantCard/>
     </ChakraProvider>
 
 )
