@@ -74,10 +74,25 @@ async function createDefaultUser() {
 const secretCode = generateSecretCode();
 
 io.on("connection", async (socket) => {
+ 
+  //Tools
   const ipAddress = await getIpAddress();
   console.log("A client has connected");
+  
+  //Specials
   socket.emit("ipAddress", ipAddress);
   socket.emit("secretCode", secretCode);
+
+  //Special-Requests
+  socket.on("ipAddress-r", () => {
+    socket.emit("ipAddress", ipAddress);
+    });
+    socket.on("secretCode-r", () => {
+      socket.emit("secretCode", secretCode);
+    });
+
+
+  //Authentication
   socket.on("authenticate", async ({ username, password }) => {
     try {
       // Find the user by their username
@@ -126,6 +141,9 @@ io.on("connection", async (socket) => {
       return socket.emit("status", "401");
     }
   });
+
+
+  //Register
   socket.on("register-user", async ({ name, username, password, role }) => {
     try {
       // Check if the username already exists
@@ -147,6 +165,53 @@ io.on("connection", async (socket) => {
           username,
           password: passwordHash,
           role: role || "judge", // set the role to "judge" if it's not provided
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  socket.on("register-participant", async ({ lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group }) => {
+    try {
+      // Check if the participant already exists
+      const existingParticipant = await prisma.participant.findFirst({
+        where: {
+          lastName,
+          firstName,
+          birthYear: new Date(birthYear), // Convert birthYear to DateTime type
+        },
+      });
+  
+      if (existingParticipant) {
+        console.log("Participant already exists!");
+        return; // Exit the function if participant already exists
+      }
+  
+      const club = await prisma.club.findFirst({
+        where: {
+          name: clublinkId,
+        },
+      });
+  
+      if (!club) {
+        console.log("Club not found!");
+        return; // Exit the function if club is not found
+      }
+  
+      const newParticipant = await prisma.participant.create({
+        data: {
+          lastName,
+          firstName,
+          birthYear: new Date(birthYear), // Convert birthYear to DateTime type
+          country,
+          clublink: {
+            connect: {
+              id: club.id,
+            },
+          },
+          division,
+          age_category,
+          age_group,
         },
       });
     } catch (error) {
@@ -180,12 +245,192 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
-  socket.on("ipAddress-r", () => {
-  socket.emit("ipAddress", ipAddress);
+
+  //fetching
+  socket.on('fetchJudges', async () => {
+    try {
+      const judges = await prisma.user.findMany({
+        where: {
+          role: 'judge',
+        },
+      });
+      socket.emit('judgesData', judges);
+    } catch (error) {
+      console.error('Error fetching judges:', error);
+    }
   });
-  socket.on("secretCode-r", () => {
-    socket.emit("secretCode", secretCode);
+  socket.on('fetchClubs', async () => {
+    try {
+      const clubs = await prisma.club.findMany();
+      socket.emit('clubsData', clubs);
+    } catch (error) {
+      console.error('Error fetching judges:', error);
+    }
   });
+  socket.on('fetchParticipants', async () => {
+    try {
+      const participants = await prisma.participant.findMany();
+      socket.emit('participantsData', participants);
+    } catch (error) {
+      console.error('Error fetching judges:', error);
+    }
+  });
+
+  //Deleting
+  socket.on('delete-participant', async ( participantID ) => {
+    try {
+      const participant = await prisma.participant.delete({
+        where: {
+          id: participantID,
+        },
+      });
+      socket.emit('participant-deleted', "Deleted");
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+    }
+  });
+  socket.on('delete-judge', async ( judgeID ) => {
+    try {
+      const judges = await prisma.user.delete({
+        where: {
+          id: judgeID,
+        },
+      });
+      socket.emit('judge-deleted', "Deleted");
+    } catch (error) {
+      console.error('Error deleting judge:', error);
+    }
+  });
+  socket.on('delete-club', async (clubID ) => {
+    try {
+      const club = await prisma.club.delete({
+        where: {
+          id: clubID,
+        },
+      });
+      socket.emit('club-deleted', "Deleted");
+    } catch (error) {
+      console.error('Error deleting club:', error);
+    }
+  });
+
+  //updating
+  socket.on("update-user", async ({ id, name, username, password, role }) => {
+    try {
+      // Find the user by ID
+      const user = await prisma.user.findUnique({
+        where: { id: id },
+      });
+  
+      if (!user) {
+        throw new Error("User not found");
+      }
+  
+      // Update the user properties
+      user.name = name;
+      user.username = username;
+      user.password = await bcrypt.hash(password, 10);
+      user.role = role || "judge"; // set the role to "judge" if it's not provided
+  
+      // Save the updated user
+      const updatedUser = await prisma.user.update({
+        where: { id: id },
+        data: user,
+      });
+  
+      // Emit a success event back to the client
+      socket.emit("update-user-success", updatedUser);
+    } catch (error) {
+      console.error(error);
+      // Emit an error event back to the client
+      socket.emit("update-user-error", error);
+    }
+  });
+  socket.on("update-club", async ({ id, name, cellPhone, email }) => {
+    try {
+      // Find the club by ID
+      const club = await prisma.club.findUnique({
+        where: { id: id },
+      });
+  
+      if (!club) {
+        throw new Error("Club not found");
+      }
+  
+      // Update the club properties
+      club.name = name;
+      club.cellPhone = cellPhone;
+      club.email =email;
+      
+  
+      // Save the updated club
+      const updatedClub = await prisma.club.update({
+        where: { id: id },
+        data: club,
+      });
+  
+      // Emit a success event back to the client
+      socket.emit("update-club-success", updatedClub);
+    } catch (error) {
+      console.error(error);
+      // Emit an error event back to the client
+      socket.emit("update-club-error", error);
+    }
+  });
+  socket.on("update-participant", async ({ id, lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group }) => {
+    try {
+      const existingParticipant = await prisma.participant.findUnique({
+        where: {
+          id: id,
+        },
+      });
+  
+      if (!existingParticipant) {
+        console.log("Participant not found!");
+        return; // Exit the function if participant is not found
+      }
+  
+      const club = await prisma.club.findFirst({
+        where: {
+          name: clublinkId,
+        },
+      });
+  
+      if (!club) {
+        console.log("Club not found!");
+        return; // Exit the function if club is not found
+      }
+  
+      const updatedParticipant = await prisma.participant.update({
+        where: {
+          id:id,
+        },
+        data: {
+          lastName,
+          firstName,
+          birthYear: new Date(birthYear), // Convert birthYear to DateTime type
+          country,
+          clublink: {
+            connect: {
+              id: club.id,
+            },
+          },
+          division,
+          age_category,
+          age_group,
+        },
+      });
+  
+      console.log("Participant updated:", updatedParticipant);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  
+  
+
+
+
 });
 
 // wifi setup

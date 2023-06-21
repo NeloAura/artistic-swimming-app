@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChakraProvider,
   useDisclosure,
@@ -24,7 +23,6 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  Textarea,
   Select,
   Drawer,
   DrawerBody,
@@ -33,7 +31,6 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
-  Checkbox,
   // Alert,
   // AlertIcon,
   // AlertDescription,
@@ -48,6 +45,7 @@ import {
 } from "@chakra-ui/icons";
 import { QRCodeGenerator } from "./QRCodeGenerator";
 import { emit } from "../socket_io";
+import { socket } from "../socket_io";
 
 //constants
 
@@ -78,15 +76,32 @@ async function registerclub(name, cellPhone, email) {
       cellPhone,
       email,
     });
-    console.log(" Club Registration successful:",result);
+    console.log(" Club Registration successful:", result);
     return result;
   } catch (error) {
     console.error("Registration failed:", error);
     throw new Error("Registration failed");
   }
 }
-
-
+async function registerParticipant(lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group) {
+  try {
+    const result = await emit("register-participant", {
+      lastName,
+      firstName,
+      birthYear,
+      country,
+      clublinkId,
+      division,
+      age_category,
+      age_group,
+    });
+    console.log("Participant Registration successful:", result);
+    return result;
+  } catch (error) {
+    console.error("Registration failed:", error);
+    throw new Error("Registration failed");
+  }
+}
 
 
 function WalkthroughPopover(button) {
@@ -211,10 +226,69 @@ function UserDrawer() {
 function ParticipantDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const firstField = React.useRef();
-  const [checkedItems, setCheckedItems] = React.useState([false, false]);
-  const allChecked = checkedItems.every(Boolean);
-  const isIndeterminate = checkedItems.some(Boolean) && !allChecked;
 
+  const [clubs, setClubs] = React.useState([]);
+
+  // Assuming you are using an asynchronous function
+  const fetchClubs = async () => {
+    // Perform your data fetching logic here
+    return new Promise((resolve, reject) => {
+      socket.emit('fetchClubs');
+      socket.on('clubsData', (clubs) => {
+      resolve(clubs);
+    });
+    socket.on('connect_error', (error) => {
+      reject(error);
+      socket.disconnect();
+    });
+    });
+  };
+
+  React.useEffect(() => {
+    const fetchClubsData = async () => {
+      try {
+        const clubsData = await fetchClubs();
+        setClubs(clubsData);
+      } catch (error) {
+        console.error('Error setting clubs:', error);
+      }
+    };
+
+    fetchClubsData();
+  }, []);
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const lastName = document.getElementById('lastname').value;
+    const firstName = document.getElementById('firstname').value;
+    const birthYear = document.getElementById('BirthDate').value;
+    const country = document.getElementById('country').value;
+    const clublinkId = document.getElementById('club').value;
+    const division = document.getElementById('division').value;
+    const age_category = document.getElementById('age-categorie').value;
+    const age_group = document.getElementById('age-group').value;
+
+    try {
+     const result = await registerParticipant(
+        lastName,
+        firstName,
+        birthYear,
+        country,
+        clublinkId,
+        division,
+        age_category,
+        age_group
+      ).then(onClose());
+      
+      console.log("Registration successful:", result);
+      return result;
+
+    } catch (error) {
+      console.error('Failed to register participant:', error);
+    }
+  };
+  
   return (
     <>
       <Button colorScheme="green" onClick={onOpen}>
@@ -230,42 +304,48 @@ function ParticipantDrawer() {
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader borderBottomWidth="1px">
-            Create a new account
+            Create a new Participant
           </DrawerHeader>
 
           <DrawerBody>
+          <form onSubmit={handleSubmit}>
             <Stack spacing="24px">
               <Box>
-                <FormLabel htmlFor="lastname">Participant LastName</FormLabel>
+                <FormLabel htmlFor="lastname">Participant Lastname</FormLabel>
                 <Input
                   ref={firstField}
                   id="lastname"
                   placeholder="Please enter lastname"
                 />
-                <FormLabel htmlFor="firstname">Participant FirstName</FormLabel>
+                <FormLabel htmlFor="firstname">Participant Firstname</FormLabel>
                 <Input id="firstname" placeholder="Please enter firstname" />
-                <FormLabel htmlFor="BirthDate">Participant FirstName</FormLabel>
+                <br/>
+                <br/>
+                <FormLabel htmlFor="BirthDate"> Birthyear</FormLabel>
                 <Input
                   type="date"
-                  id="firstname"
+                  id="BirthDate"
                   placeholder="BirthDate"
                 ></Input>
                 <FormLabel htmlFor="country">Country</FormLabel>
                 <Select id="country" defaultValue="Curacao">
-                  <option value="Curacao">AWD</option>
-                  <option value="Bonaire">Novice-A</option>
-                  <option value="Aruba">Novice-B</option>
-                  <option value="Venezuela">Age-Group</option>
+                  <option value="Curacao">Curacao</option>
+                  <option value="Bonaire">Bonaire</option>
+                  <option value="Aruba">Aruba</option>
+                  <option value="Venezuela">Venezuela</option>
                 </Select>
               </Box>
               <Box></Box>
-
               <Box>
                 <FormLabel htmlFor="club">Select Club</FormLabel>
-                <Select id="club" defaultValue="Stakamahachi">
-                  <option value="Stakamahachi">Stakamahachi</option>
-                  <option value="Tioluwani">Tioluwani</option>
+                <Select id="club">
+                  {clubs.map((club) => (
+                    <option key={club.id} value={club.name}>
+                      {club.name}
+                    </option>
+                  ))}
                 </Select>
+                <br/>
                 <FormLabel htmlFor="division">Select Division</FormLabel>
                 <Select id="division" defaultValue="awd">
                   <option value="awd">AWD</option>
@@ -273,141 +353,44 @@ function ParticipantDrawer() {
                   <option value="novice-b">Novice-B</option>
                   <option value="age-group">Age-Group</option>
                 </Select>
+                <br/>
                 <FormLabel htmlFor="age-categorie">
                   Select AgeCategorie
                 </FormLabel>
-              </Box>
-
-              <Box>
-                {/* awd */}
-                <>
-                  <Checkbox>AWD</Checkbox>
-                  {/* Novice */}
-                  <Checkbox
-                    isChecked={allChecked}
-                    isIndeterminate={isIndeterminate}
-                    onChange={(e) =>
-                      setCheckedItems([e.target.checked, e.target.checked])
-                    }
-                  >
-                    Novice
-                  </Checkbox>
-                  <Stack pl={6} mt={1} spacing={1}>
-                    <Checkbox
-                      isChecked={checkedItems[0]}
-                      onChange={(e) =>
-                        setCheckedItems([e.target.checked, checkedItems[1]])
-                      }
-                    >
-                      6 & Under
-                    </Checkbox>
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      7 & 8
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      9 & 10
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      11 & 12
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      13 & O
-                    </Checkbox>
-                  </Stack>
-
-                  {/* Agegroup */}
-                  <Checkbox
-                    isChecked={allChecked}
-                    isIndeterminate={isIndeterminate}
-                    onChange={(e) =>
-                      setCheckedItems([e.target.checked, e.target.checked])
-                    }
-                  >
-                    AgeGroup
-                  </Checkbox>
-                  <Stack pl={6} mt={1} spacing={1}>
-                    <Checkbox
-                      isChecked={checkedItems[0]}
-                      onChange={(e) =>
-                        setCheckedItems([e.target.checked, checkedItems[1]])
-                      }
-                    >
-                      10 & Under
-                    </Checkbox>
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      12 & Under
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      Youth
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      Junior
-                    </Checkbox>
-
-                    <Checkbox
-                      isChecked={checkedItems[1]}
-                      onChange={(e) =>
-                        setCheckedItems([checkedItems[0], e.target.checked])
-                      }
-                    >
-                      Senior
-                    </Checkbox>
-                  </Stack>
-                </>
-              </Box>
-
-              <Box>
-                <FormLabel htmlFor="desc">Description</FormLabel>
-                <Textarea id="desc" />
+                <Select id="age-categorie" defaultValue="AWD-6&Under">
+                  <option value="AWD-6&Under">AWD-6&Under</option>
+                  <option value="AWD-7&8">AWD-7&8</option>
+                  <option value="AWD-9&10">AWD-9&10</option>
+                  <option value="AWD-11&12">AWD-11&12</option>
+                  <option value="AWD-13&Over">AWD-13&Over</option>
+                  <option value="Novice-6&Under">Novice-6&Under</option>
+                  <option value="Novice-7&8">Novice-7&8</option>
+                  <option value="Novice-9&10">Novice-9&10</option>
+                  <option value="Novice-11&12">Novice-11&12</option>
+                  <option value="Novice-13&Over">Novice-13&Over</option>
+                </Select>
+                <br/>
+                <FormLabel htmlFor="age-group">
+                  Select AgeGroup
+                </FormLabel>
+                <Select id="age-group" defaultValue="10&Under">
+                  <option value="10&Under">10&Under</option>
+                  <option value="12&Under">12&Under</option>
+                  <option value="Youth">Youth</option>
+                  <option value="Senior">Senior</option>
+                </Select>
               </Box>
             </Stack>
+            <br/>
+            <Button colorScheme="blue" type="submit">Submit</Button>
+            </form>
           </DrawerBody>
 
           <DrawerFooter borderTopWidth="1px">
             <Button variant="outline" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button colorScheme="blue">Submit</Button>
+            
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -422,12 +405,9 @@ function ClubDrawer() {
     const name = document.getElementById("name").value;
     const cellPhone = document.getElementById("cellPhone").value;
     const email = document.getElementById("email").value;
-    
 
     try {
-      const result = await registerclub(name, cellPhone, email).then(
-        onClose()
-      );
+      const result = await registerclub(name, cellPhone, email).then(onClose());
 
       console.log("Registration successful:", result);
       return result;
@@ -450,33 +430,39 @@ function ClubDrawer() {
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader borderBottomWidth="1px">
-            Create a new account
+            Create a new Club
           </DrawerHeader>
 
           <DrawerBody>
-          <form onSubmit={handleSubmit}>
-            <Stack spacing="24px">
-              <Box>
-                <FormLabel htmlFor="name">Name</FormLabel>
-                <Input
-                  ref={firstField}
-                  id="name"
-                  placeholder="Please enter Club Name"
-                />
-                <FormLabel htmlFor="Cell-phone">Cell-Phone</FormLabel>
-                <InputGroup>
-                  <InputLeftAddon children="+5999" />
-                  <Input type="tel" placeholder="phone number"  id ="cellPhone" />
-                </InputGroup>
-                <FormLabel htmlFor="email">Email</FormLabel>
-                <Input
-                  type="email"
-                  id="email"
-                  placeholder="Please enter email"
-                />
-              </Box>
-            </Stack>
-            <Button mt={4} colorScheme="blue" type="submit">Submit</Button>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing="24px">
+                <Box>
+                  <FormLabel htmlFor="name">Name</FormLabel>
+                  <Input
+                    ref={firstField}
+                    id="name"
+                    placeholder="Please enter Club Name"
+                  />
+                  <FormLabel htmlFor="Cell-phone">Cell-Phone</FormLabel>
+                  <InputGroup>
+                    <InputLeftAddon children="+5999" />
+                    <Input
+                      type="tel"
+                      placeholder="phone number"
+                      id="cellPhone"
+                    />
+                  </InputGroup>
+                  <FormLabel htmlFor="email">Email</FormLabel>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Please enter email"
+                  />
+                </Box>
+              </Stack>
+              <Button mt={4} colorScheme="blue" type="submit">
+                Submit
+              </Button>
             </form>
           </DrawerBody>
 
@@ -484,8 +470,6 @@ function ClubDrawer() {
             <Button variant="outline" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            
-            
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -542,198 +526,191 @@ function ImagePopover(button) {
   );
 }
 
-
-
 const Navigation = () => {
-
-  const navigateToDashboard =  () => {
-    return <Navigate to="/dashboard" />;
+  const navigate = useNavigate();
+  const navigateToDashboard = () => {
+    navigate("/dashboard");
   };
-  
+
   const navigateToParticipant = () => {
-    return <Navigate to="/participant" />;
+    navigate("/participant");
   };
-  
+
   const navigateToJudge = () => {
-    return <Navigate to="/judge" />;
+    navigate("/judge");
   };
-  
+
   const navigateToClub = () => {
-    return <Navigate to="/club" />;
+    navigate("/club");
   };
-  
 
-return(
-  <ChakraProvider resetCSS>
-  <Box
-      display="flex"
-      overflow="visible"
-      minWidth="100%"
-      minHeight={75}
-      flexDirection="row"
-      alignItems="stretch"
-      justifyContent="flex-start"
-      backgroundColor="red.500"
-    >
- 
-  <List
-    styleType="square"
-    display="flex"
-    backgroundColor="twitter.300"
-    overflow="visible"
-    justifyContent="space-around"
-    minHeight={75}
-    minWidth="100%"
-    alignItems="stretch"
-    flexDirection="row"
-  >
-    {WalkthroughPopover(
-      <IconButton
-        aria-label="icon"
-        icon={<AddIcon />}
-        size="lg"
-        isRound
+  return (
+    <ChakraProvider resetCSS>
+      <Box
         display="flex"
+        overflow="visible"
+        minWidth="100%"
+        minHeight={75}
         flexDirection="row"
-        justifyContent="center"
-        colorScheme="red"
-        mt={3}
-        variant="link"
-        backgroundColor="whiteAlpha.900"
-        border={2}
-        borderRadius={45}
-        mb={3}
-        alignItems="center"
-      />
-    )}
+        alignItems="stretch"
+        justifyContent="flex-start"
+        backgroundColor="red.500"
+      >
+        <List
+          styleType="square"
+          display="flex"
+          backgroundColor="twitter.300"
+          overflow="visible"
+          justifyContent="space-around"
+          minHeight={75}
+          minWidth="100%"
+          alignItems="stretch"
+          flexDirection="row"
+        >
+          {WalkthroughPopover(
+            <IconButton
+              aria-label="icon"
+              icon={<AddIcon />}
+              size="lg"
+              isRound
+              display="flex"
+              flexDirection="row"
+              justifyContent="center"
+              colorScheme="red"
+              mt={3}
+              variant="link"
+              backgroundColor="whiteAlpha.900"
+              border={2}
+              borderRadius={45}
+              mb={3}
+              alignItems="center"
+            />
+          )}
 
-    <Button
-      variant="link"
-      size="md"
-      ml={3}
-      mr={3}
-      backgroundColor="red.500"
-      color="whiteAlpha.900"
-      fontWeight="bold"
-      opacity={1}
-      colorScheme="red"
-      leftIcon={<HamburgerIcon />}
-      display="flex"
-      justifyContent="center"
-      height={16}
-      textAlign="center"
-      width={40}
-      mt={1}
-      alignItems="center"
-      onClick={navigateToDashboard}
-    >
-      Dashboard
-    </Button>
-    <Button
-      variant="link"
-      size="md"
-      ml={3}
-      mr={3}
-      backgroundColor="red.500"
-      color="whiteAlpha.900"
-      fontWeight="bold"
-      opacity={1}
-      colorScheme="red"
-      leftIcon={<ViewIcon />}
-      display="flex"
-      justifyContent="center"
-      height={16}
-      textAlign="center"
-      width={40}
-      mt={1}
-      alignItems="center"
-      onClick={navigateToParticipant}
-    >
-      Participants
-    </Button>
-    <Button
-      variant="link"
-      size="md"
-      ml={3}
-      mr={3}
-      backgroundColor="red.500"
-      color="whiteAlpha.900"
-      fontWeight="bold"
-      opacity={1}
-      colorScheme="red"
-      leftIcon={<ViewIcon />}
-      display="flex"
-      justifyContent="center"
-      height={16}
-      textAlign="center"
-      width={40}
-      mt={1}
-      alignItems="center"
-      onClick={navigateToJudge}
-    >
-      Judges
-    </Button>
-    <Button
-      onClick={() => navigateToClub}
-      variant="link"
-      size="md"
-      ml={3}
-      mr={3}
-      backgroundColor="red.500"
-      color="whiteAlpha.900"
-      fontWeight="bold"
-      opacity={1}
-      colorScheme="red"
-      leftIcon={<ViewIcon />}
-      display="flex"
-      justifyContent="center"
-      height={16}
-      textAlign="center"
-      width={40}
-      mt={1}
-      alignItems="center"
-    >
-      Clubs
-    </Button>
-    {ImagePopover(
-      <IconButton
-        aria-label="icon"
-        icon={<InfoOutlineIcon />}
-        size="lg"
-        isRound
-        display="flex"
-        flexDirection="row"
-        justifyContent="center"
-        colorScheme="red"
-        mt={3}
-        variant="link"
-        backgroundColor="whiteAlpha.900"
-        border={2}
-        borderRadius={45}
-        mb={3}
-        alignItems="center"
-      />
-    )}
+          <Button
+            variant="link"
+            size="md"
+            ml={3}
+            mr={3}
+            backgroundColor="red.500"
+            color="whiteAlpha.900"
+            fontWeight="bold"
+            opacity={1}
+            colorScheme="red"
+            leftIcon={<HamburgerIcon />}
+            display="flex"
+            justifyContent="center"
+            height={16}
+            textAlign="center"
+            width={40}
+            mt={1}
+            alignItems="center"
+            onClick={navigateToDashboard}
+          >
+            Dashboard
+          </Button>
+          <Button
+            variant="link"
+            size="md"
+            ml={3}
+            mr={3}
+            backgroundColor="red.500"
+            color="whiteAlpha.900"
+            fontWeight="bold"
+            opacity={1}
+            colorScheme="red"
+            leftIcon={<ViewIcon />}
+            display="flex"
+            justifyContent="center"
+            height={16}
+            textAlign="center"
+            width={40}
+            mt={1}
+            alignItems="center"
+            onClick={navigateToParticipant}
+          >
+            Participants
+          </Button>
+          <Button
+            variant="link"
+            size="md"
+            ml={3}
+            mr={3}
+            backgroundColor="red.500"
+            color="whiteAlpha.900"
+            fontWeight="bold"
+            opacity={1}
+            colorScheme="red"
+            leftIcon={<ViewIcon />}
+            display="flex"
+            justifyContent="center"
+            height={16}
+            textAlign="center"
+            width={40}
+            mt={1}
+            alignItems="center"
+            onClick={navigateToJudge}
+          >
+            Judges
+          </Button>
+          <Button
+            variant="link"
+            size="md"
+            ml={3}
+            mr={3}
+            backgroundColor="red.500"
+            color="whiteAlpha.900"
+            fontWeight="bold"
+            opacity={1}
+            colorScheme="red"
+            leftIcon={<ViewIcon />}
+            display="flex"
+            justifyContent="center"
+            height={16}
+            textAlign="center"
+            width={40}
+            mt={1}
+            alignItems="center"
+            onClick={navigateToClub}
+          >
+            Clubs
+          </Button>
+          {ImagePopover(
+            <IconButton
+              aria-label="icon"
+              icon={<InfoOutlineIcon />}
+              size="lg"
+              isRound
+              display="flex"
+              flexDirection="row"
+              justifyContent="center"
+              colorScheme="red"
+              mt={3}
+              variant="link"
+              backgroundColor="whiteAlpha.900"
+              border={2}
+              borderRadius={45}
+              mb={3}
+              alignItems="center"
+            />
+          )}
 
-    <Avatar
-      size="md"
-      showBorder
-      display="block"
-      justifyContent="center"
-      alignItems="center"
-      flexDirection="row"
-      mt={3}
-      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRruTfnpNKs0px2RjVrmJy9T0srVXoUg76e8g&usqp=CAU"
-    >
-      <AvatarBadge bg="green.500" boxSize="1.25rem" borderColor="white" />
-    </Avatar>
-  </List>
-  </Box>
-  </ChakraProvider>
-
- );
-    };
-
-
+          <Avatar
+            size="md"
+            showBorder
+            display="block"
+            justifyContent="center"
+            alignItems="center"
+            flexDirection="row"
+            mt={3}
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRruTfnpNKs0px2RjVrmJy9T0srVXoUg76e8g&usqp=CAU"
+          >
+            <AvatarBadge bg="green.500" boxSize="1.25rem" borderColor="white" />
+          </Avatar>
+        </List>
+      </Box>
+    </ChakraProvider>
+  );
+};
 
 export default Navigation;

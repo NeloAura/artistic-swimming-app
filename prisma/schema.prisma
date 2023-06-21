@@ -32,14 +32,15 @@ model Event {
 
 model Participant {
   id              Int           @id @default(autoincrement())
-  clublink        Club          @relation(fields: [clublinkId], references: [id])
+  clublink        Club          @relation(fields: [clublinkId], references: [id], onDelete: Cascade)
   clublinkId      Int
   lastName        String?
   firstName       String?
   birthYear       DateTime?
   division        String?
   age_category    String?
-  Country         String?
+  age_group       String?
+  country         String?
   generatedNumber Int?
   competitions    Competition[]
   events          Event[]
@@ -65,7 +66,7 @@ model User {
   name         String?
   username     String?       @unique
   password     String?
-  role         String?
+  role         String?       
   competitions Competition[]
   scores       Score[]
   configurations Configuration[]
