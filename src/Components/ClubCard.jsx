@@ -47,9 +47,9 @@ const fetchClubs = async () => {
   });
 };
 
-async function deleteClub(clubID) {
+async function deleteClub(ClubID) {
   try {
-    const result = await emit("delete-club", clubID);
+    const result = await emit("delete-club", ClubID);
     console.log("Club deleted successfully:", result);
     return result;
   } catch (error) {
@@ -74,10 +74,10 @@ async function updateClub(ClubID, name, cellPhone, email) {
   }
 }
 
-const DeletePopover = ({ button, initialFocusRef, clubID, onDelete }) => {
+const DeletePopover = ({ button, initialFocusRef, ClubID, onDelete }) => {
   const handleDelete = async () => {
     try {
-      await onDelete(clubID);
+      await onDelete(ClubID);
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -244,10 +244,10 @@ const ClubCard = () => {
     fetchClubsData();
   }, []);
 
-  const handleDeleteClub = async (clubID) => {
+  const handleDeleteClub = async (ClubID) => {
     try {
-      await deleteClub(clubID);
-      const updatedClubs = clubs.filter((club) => club.id !== clubID);
+      await deleteClub(ClubID);
+      const updatedClubs = clubs.filter((club) => club.id !== ClubID);
       setClubs(updatedClubs);
     } catch (error) {
       console.error("Error deleting club:", error);

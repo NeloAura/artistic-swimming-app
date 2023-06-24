@@ -1,4 +1,4 @@
-import React, { useEffect ,useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   ChakraProvider,
   Text,
@@ -7,6 +7,7 @@ import {
   CardBody,
   SimpleGrid,
   CardFooter,
+  Checkbox,
   Badge,
   Button,
   ButtonGroup,
@@ -35,24 +36,33 @@ import { SunIcon, DeleteIcon } from "@chakra-ui/icons";
 import NavigationComp from "./Navigation";
 import { socket, emit } from "../socket_io";
 
-
-
-  // Assuming you are using an asynchronous function
-  const fetchClubs = async () => {
-    // Perform your data fetching logic here
-    return new Promise((resolve, reject) => {
-      socket.emit('fetchClubs');
-      socket.on('clubsData', (clubs) => {
+// Assuming you are using an asynchronous function
+const fetchClubs = async () => {
+  // Perform your data fetching logic here
+  return new Promise((resolve, reject) => {
+    socket.emit("fetchClubs");
+    socket.on("clubsData", (clubs) => {
       resolve(clubs);
     });
-    socket.on('connect_error', (error) => {
+    socket.on("connect_error", (error) => {
       reject(error);
       socket.disconnect();
     });
+  });
+};
+
+const fetchCompetitions = async () => {
+  return new Promise((resolve, reject) => {
+    socket.emit("fetchCompetitions");
+    socket.on("competitionsData", (competitions) => {
+      resolve(competitions);
     });
-  };
-
-
+    socket.on("connect_error", (error) => {
+      reject(error);
+      socket.disconnect();
+    });
+  });
+};
 
 const fetchParticipants = async () => {
   return new Promise((resolve, reject) => {
@@ -80,26 +90,28 @@ async function deleteParticipant(ParticipantID) {
 
 async function updateParticipant(
   ParticipantID,
-  lastname,
-  firstname,
-  birthyear,
+  lastName,
+  firstName,
+  birthYear,
   country,
-  clublinkid,
+  clublinkId,
   division,
   age_category,
-  age_group
+  competition,
+  event
 ) {
   try {
     const result = emit("update-participant", {
       id: ParticipantID,
-      lastname,
-      firstname,
-      birthyear,
+      lastName,
+      firstName,
+      birthYear,
       country,
-      clublinkid,
+      clublinkId,
       division,
       age_category,
-      age_group,
+      competition,
+      event,
     });
     console.log("Update successful:", ParticipantID);
     return result;
@@ -165,8 +177,9 @@ function ParticipantForm({
   initialBirthYear,
   initialDivision,
   initialAgeCategory,
-  initialAgeGroup,
   initialCountry,
+  initialCompetition,
+  initialEvent,
   isOpen,
   onOpen,
   onClose,
@@ -182,9 +195,11 @@ function ParticipantForm({
     clublinkId: initialClubLinkID,
     division: initialDivision,
     age_category: initialAgeCategory,
-    age_group: initialAgeGroup,
+    competition: initialCompetition,
+    event: initialEvent,
   });
   const [clubs, setClubs] = React.useState([]);
+  const [competitions, setCompetitions] = React.useState([]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -196,7 +211,8 @@ function ParticipantForm({
         clublinkId: initialClubLinkID,
         division: initialDivision,
         age_category: initialAgeCategory,
-        age_group: initialAgeGroup,
+        competition: initialCompetition,
+        event: initialEvent.split(","),
       });
     }
   }, [
@@ -208,7 +224,8 @@ function ParticipantForm({
     initialClubLinkID,
     initialDivision,
     initialAgeCategory,
-    initialAgeGroup,
+    initialCompetition,
+    initialEvent,
   ]);
 
   React.useEffect(() => {
@@ -217,11 +234,24 @@ function ParticipantForm({
         const clubsData = await fetchClubs();
         setClubs(clubsData);
       } catch (error) {
-        console.error('Error setting clubs:', error);
+        console.error("Error setting clubs:", error);
       }
     };
 
     fetchClubsData();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchCompetitionsData = async () => {
+      try {
+        const competitionsData = await fetchCompetitions();
+        setCompetitions(competitionsData);
+      } catch (error) {
+        console.error("Error setting competitions:", error);
+      }
+    };
+
+    fetchCompetitionsData();
   }, []);
 
   const handleSubmit = async () => {
@@ -229,26 +259,45 @@ function ParticipantForm({
       const {
         lastname,
         firstname,
-        birthyear,
+        birthYear,
         country,
-        clublinkid,
+        clublinkId,
         division,
         age_category,
-        age_group,
+        competition,
+        event,
       } = formValues;
+
+      const eventString = event.join(","); // Convert event array to string separated by commas
+
       const result = await onUpdate(
         ParticipantID,
         lastname,
         firstname,
-        birthyear,
+        birthYear,
         country,
-        clublinkid,
+        clublinkId,
         division,
         age_category,
-        age_group
+        competition,
+        eventString // Pass the event string to the onUpdate function
       );
+
       onClose();
-      console.log("Update successful:", ParticipantID);
+      console.log(
+        "Update successful:",
+        ParticipantID,
+        lastname,
+        firstname,
+        birthYear,
+        country,
+        clublinkId,
+        division,
+        age_category,
+        competition,
+        eventString // Log the event string
+      );
+
       return result;
     } catch (error) {
       console.error("Failed to update user:", error);
@@ -256,10 +305,41 @@ function ParticipantForm({
   };
 
   const handleChange = (field, value) => {
-    setFormValues((prevFormValues) => ({
-      ...prevFormValues,
-      [field]: value,
-    }));
+    setFormValues((prevFormValues) => {
+      if (field === "event") {
+        // Checkbox field
+        const prevFieldValues = Array.isArray(prevFormValues[field])
+          ? prevFormValues[field]
+          : [];
+
+        if (prevFieldValues.includes(value)) {
+          // Checkbox is unisChecked, remove value from the array
+          const updatedValues = prevFieldValues.filter(
+            (item) => item !== value
+          );
+          console.log(`Removed ${value} from ${field}:`, updatedValues);
+          return {
+            ...prevFormValues,
+            [field]: updatedValues,
+          };
+        } else {
+          // Checkbox is isChecked, add value to the array
+          const updatedValues = [...prevFieldValues, value];
+          console.log(`Added ${value} to ${field}:`, updatedValues);
+          return {
+            ...prevFormValues,
+            [field]: updatedValues,
+          };
+        }
+      } else {
+        // Non-checkbox field, update value directly
+        console.log(`Updated ${field} value:`, value);
+        return {
+          ...prevFormValues,
+          [field]: value,
+        };
+      }
+    });
   };
 
   return (
@@ -281,13 +361,15 @@ function ParticipantForm({
           </DrawerHeader>
           <DrawerBody>
             <form onSubmit={handleSubmit}>
-           <Stack spacing="24px">
+              <Stack spacing="24px">
                 <Box>
-                  <FormLabel htmlFor={`lastname_${ParticipantID}`}>Lastname</FormLabel>
+                  <FormLabel htmlFor={`lastname_${ParticipantID}`}>
+                    Lastname
+                  </FormLabel>
                   <Input
                     ref={firstField}
                     id={`lastname_${ParticipantID}`}
-                    value={formValues.lastname ?? ''}
+                    value={formValues.lastname}
                     onChange={(e) => handleChange("lastname", e.target.value)}
                     placeholder="Please enter lastname"
                   />
@@ -296,80 +378,155 @@ function ParticipantForm({
                   </FormLabel>
                   <Input
                     id={`firstname_${ParticipantID}`}
-                    value={formValues.firstname ?? ''}
+                    value={formValues.firstname}
                     onChange={(e) => handleChange("firstname", e.target.value)}
                     placeholder="Please enter firstname"
                   />
-                  <br/>
-                  <br/>
-                  <FormLabel htmlFor={`BirthDate_${ParticipantID}`}> Birthyear</FormLabel>
-                <Input
-                  type="date"
-                  id={`BirthDate_${ParticipantID}`}
-                  value={formValues.birthYear ?? ''}
-                  onChange={(e) => handleChange("birthYear", e.target.value)}
-                  placeholder="BirthDate"
-                />
-                
-                <FormLabel htmlFor={`country_${ParticipantID}`}>Country</FormLabel>
-                <Select id={`country_${ParticipantID}`} value={formValues.country ?? ''}
-                    onChange={(e) => handleChange("country", e.target.value)}>
-                  <option value="Curacao">Curacao</option>
-                  <option value="Bonaire">Bonaire</option>
-                  <option value="Aruba">Aruba</option>
-                  <option value="Venezuela">Venezuela</option>
-                </Select>
-              </Box>
-              <Box></Box>
-              <Box>
-                <FormLabel htmlFor={`club_${ParticipantID}`}>Select Club</FormLabel>
-                <Select id={`club_${ParticipantID}`} value={formValues.clublinkId ?? ''}
-                    onChange={(e) => handleChange("clublinkId", e.target.value)}>
-                  {clubs.map((club) => (
-                    <option key={club.id} value={club.name}>
-                      {club.name}
-                    </option>
-                  ))}
-                </Select>
-                <br/>
-                <FormLabel htmlFor={`division_${ParticipantID}`}>Select Division</FormLabel>
-                <Select id={`division_${ParticipantID}`} value={formValues.division ?? ''}
-                    onChange={(e) => handleChange("division", e.target.value)}>
-                  <option value="awd">AWD</option>
-                  <option value="novice-a">Novice-A</option>
-                  <option value="novice-b">Novice-B</option>
-                  <option value="age-group">Age-Group</option>
-                </Select>
-                <br/>
-                <FormLabel htmlFor={`age-categorie_${ParticipantID}`}>
-                  Select AgeCategorie
-                </FormLabel>
-                <Select id={`age-categorie_${ParticipantID}`} value={formValues.age_category ?? ''}
-                    onChange={(e) => handleChange("age_category", e.target.value)}>
-                  <option value="AWD-6&Under">AWD-6&Under</option>
-                  <option value="AWD-7&8">AWD-7&8</option>
-                  <option value="AWD-9&10">AWD-9&10</option>
-                  <option value="AWD-11&12">AWD-11&12</option>
-                  <option value="AWD-13&Over">AWD-13&Over</option>
-                  <option value="Novice-6&Under">Novice-6&Under</option>
-                  <option value="Novice-7&8">Novice-7&8</option>
-                  <option value="Novice-9&10">Novice-9&10</option>
-                  <option value="Novice-11&12">Novice-11&12</option>
-                  <option value="Novice-13&Over">Novice-13&Over</option>
-                </Select>
-                <br/>
-                <FormLabel htmlFor={`age-group_${ParticipantID}`}>
-                  Select AgeGroup
-                </FormLabel>
-                <Select id={`age-group_${ParticipantID}`} value={formValues.age_group ?? ''}
-                    onChange={(e) => handleChange("age_group", e.target.value)}>
-                  <option value="10&Under">10&Under</option>
-                  <option value="12&Under">12&Under</option>
-                  <option value="Youth">Youth</option>
-                  <option value="Senior">Senior</option>
-                </Select>
+                  <br />
+                  <br />
+                  <FormLabel htmlFor={`BirthDate_${ParticipantID}`}>
+                    {" "}
+                    Birthyear
+                  </FormLabel>
+                  <Input
+                    type="date"
+                    id={`BirthDate_${ParticipantID}`}
+                    value={formValues.birthYear}
+                    onChange={(e) => handleChange("birthYear", e.target.value)}
+                    placeholder="BirthDate"
+                  />
+
+                  <FormLabel htmlFor={`country_${ParticipantID}`}>
+                    Country
+                  </FormLabel>
+                  <Select
+                    id={`country_${ParticipantID}`}
+                    value={formValues.country}
+                    onChange={(e) => handleChange("country", e.target.value)}
+                  >
+                    <option value="Curacao">Curacao</option>
+                    <option value="Bonaire">Bonaire</option>
+                    <option value="Aruba">Aruba</option>
+                    <option value="Venezuela">Venezuela</option>
+                  </Select>
                 </Box>
-          </Stack>
+                <Box></Box>
+                <Box>
+                  <FormLabel htmlFor={`club_${ParticipantID}`}>
+                    Select Club
+                  </FormLabel>
+                  <Select
+                    id={`club_${ParticipantID}`}
+                    value={formValues.clublinkId}
+                    onChange={(e) => handleChange("clublinkId", e.target.value)}
+                  >
+                    {clubs.map((club) => (
+                      <option key={club.id} value={club.name}>
+                        {club.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <br />
+                  <FormLabel htmlFor={`division_${ParticipantID}`}>
+                    Select Division
+                  </FormLabel>
+                  <Select
+                    id={`division_${ParticipantID}`}
+                    value={formValues.division}
+                    onChange={(e) => handleChange("division", e.target.value)}
+                  >
+                    <option value="awd">AWD</option>
+                    <option value="novice-a">Novice-A</option>
+                    <option value="novice-b">Novice-B</option>
+                    <option value="age-group">Age-Group</option>
+                  </Select>
+                  <br />
+                  <FormLabel htmlFor={`age-categorie_${ParticipantID}`}>
+                    Select AgeCategorie
+                  </FormLabel>
+                  <Select
+                    id={`age-categorie_${ParticipantID}`}
+                    value={formValues.age_category}
+                    onChange={(e) =>
+                      handleChange("age_category", e.target.value)
+                    }
+                  >
+                    <option value="AWD-NoAgeLimit">AWD-NoAgeLimit</option>
+                    <option value="Novice-6&Under">Novice-6&Under</option>
+                    <option value="Novice-7&8">Novice-7&8</option>
+                    <option value="Novice-9&10">Novice-9&10</option>
+                    <option value="Novice-11&12">Novice-11&12</option>
+                    <option value="Novice-13&Over">Novice-13&Over</option>
+                    <option value="AgeGroup-10&Under">AgeGroup-10&Under</option>
+                    <option value="AgeGroup-12&Under">AgeGroup-12&Under</option>
+                    <option value="AgeGroup-Youth">AgeGroup-Youth</option>
+                    <option value="AgeGroup-Senior">AgeGroup-Senior</option>
+                  </Select>
+                  <br />
+                  <FormLabel htmlFor={`competition_${ParticipantID}`}>
+                    Select Competition
+                  </FormLabel>
+                  <Select
+                    id={`competition_${ParticipantID}`}
+                    value={formValues.competition}
+                    onChange={(e) =>
+                      handleChange("competition", e.target.value)
+                    }
+                  >
+                    {competitions.map((competition) => (
+                      <option key={competition.id} value={competition.name}>
+                        {competition.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <br />
+
+                  <FormLabel htmlFor={`competition_${ParticipantID}`}>
+                    Select Events
+                  </FormLabel>
+
+                  <Stack spacing={[1, 5]} direction={["flex-row"]}>
+                    <Checkbox
+                      colorScheme="red"
+                      value="solo"
+                      id={`event1_${ParticipantID}`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("solo")}
+                    >
+                      Solo
+                    </Checkbox>
+                    <Checkbox
+                      colorScheme="pink"
+                      value="duet"
+                      id={`event2_${ParticipantID}`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("duet")}
+                    >
+                      Duo
+                    </Checkbox>
+                    <Checkbox
+                      colorScheme="blue"
+                      value="mixDuet"
+                      id={`event3_${ParticipantID}`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("mixDuet")}
+                    >
+                      Mix Duet
+                    </Checkbox>
+                    <Checkbox
+                      colorScheme='green'
+                      value="team"
+                      id="event4"
+                      isChecked={formValues.event.includes("team")}
+                      onChange={(e) => {
+                        handleChange("event", e.target.value);
+                      }}
+                    >
+                      Team
+                    </Checkbox>
+                  </Stack>
+                </Box>
+              </Stack>
               <Button mt={4} colorScheme="blue" type="submit">
                 Update
               </Button>
@@ -388,10 +545,6 @@ function ParticipantForm({
 
 const ParticipantCard = () => {
   const [participants, setParticipants] = React.useState([]);
-  
-
-  
-  
 
   useEffect(() => {
     const fetchParticipantsData = async () => {
@@ -436,7 +589,8 @@ const ParticipantCard = () => {
     clublinkid,
     division,
     age_category,
-    age_group
+    competition,
+    event
   ) => {
     try {
       await updateParticipant(
@@ -448,7 +602,8 @@ const ParticipantCard = () => {
         clublinkid,
         division,
         age_category,
-        age_group
+        competition,
+        event
       );
       setParticipants((prevParticipants) =>
         prevParticipants.map((participant) => {
@@ -462,7 +617,8 @@ const ParticipantCard = () => {
               clublinkid,
               division,
               age_category,
-              age_group,
+              competition,
+              event,
             };
           }
           return participant;
@@ -528,17 +684,20 @@ const ParticipantCardItem = ({ participant, onDelete, onUpdate }) => {
             onClose={handleClose}
             initialLastName={participant.lastName}
             initialFirstName={participant.firstName}
-            initialBirthYear={participant.birthYear }
+            initialBirthYear={participant.birthYear}
             initialCountry={participant.country}
             initialClubLinkID={participant.clublinkId}
             initialDivision={participant.division}
-            initialAgeGroup={participant.age_group}
+            initialCompetition={participant.competion}
+            initialEvent={participant.event}
             initialAgeCategory={participant.age_category}
             ParticipantID={participant.id}
             onUpdate={onUpdate}
           />
           <DeletePopover
-            button={<Button flex="1" variant="ghost" leftIcon={<DeleteIcon />} />}
+            button={
+              <Button flex="1" variant="ghost" leftIcon={<DeleteIcon />} />
+            }
             ParticipantID={participant.id}
             onDelete={onDelete}
           />

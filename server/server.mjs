@@ -171,10 +171,10 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
-  socket.on("register-participant", async ({ lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group }) => {
+  socket.on("register-participant", async ({ lastName, firstName, birthYear, country, clublinkId, division, age_category, competition , event }) => {
     try {
       // Check if the participant already exists
-      const existingParticipant = await prisma.participant.findFirst({
+      const participant = await prisma.participant.findFirst({
         where: {
           lastName,
           firstName,
@@ -182,7 +182,7 @@ io.on("connection", async (socket) => {
         },
       });
   
-      if (existingParticipant) {
+      if (participant) {
         console.log("Participant already exists!");
         return; // Exit the function if participant already exists
       }
@@ -211,7 +211,8 @@ io.on("connection", async (socket) => {
           },
           division,
           age_category,
-          age_group,
+          competition,
+          event
         },
       });
     } catch (error) {
@@ -245,6 +246,61 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
+  socket.on("register-competition", async ({ name}) => {
+    try {
+      // Check if the username already exists
+      const existingCompetition = await prisma.competition.findUnique({
+        where: { name: name },
+      });
+
+      if (existingCompetition) {
+        throw "Competition Already exists";
+      }
+
+      // Hash the password
+      
+
+      // Create the new user
+      const newCompetition = await prisma.competition.create({
+        data: {
+          name,
+          
+           // set the role to "judge" if it's not provided
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  socket.on("register-event", async ({ id, name, type, time }) => {
+    try {
+      // Check if the event already exists
+      const existingEvent = await prisma.event.findUnique({
+        where: { name: name },
+      });
+  
+      if (existingEvent) {
+        throw "Event already exists";
+      }
+  
+      // Create the new event and associate it with the provided CompetitionID
+      const newEvent = await prisma.event.create({
+        data: {
+          name,
+          type,
+          time,
+          competition: {
+            connect: { id: id },
+          },
+        },
+      });
+  
+      console.log("Event created:", newEvent);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  
 
   //fetching
   socket.on('fetchJudges', async () => {
@@ -262,7 +318,17 @@ io.on("connection", async (socket) => {
   socket.on('fetchClubs', async () => {
     try {
       const clubs = await prisma.club.findMany();
+      
       socket.emit('clubsData', clubs);
+    } catch (error) {
+      console.error('Error fetching judges:', error);
+    }
+  });
+  socket.on('fetchCompetitions', async () => {
+    try {
+      const competitions = await prisma.competition.findMany();
+      
+      socket.emit('competitionsData', competitions);
     } catch (error) {
       console.error('Error fetching judges:', error);
     }
@@ -270,11 +336,41 @@ io.on("connection", async (socket) => {
   socket.on('fetchParticipants', async () => {
     try {
       const participants = await prisma.participant.findMany();
-      socket.emit('participantsData', participants);
+      const participantsData = await Promise.all(
+        participants.map(async participant => {
+          const club = await prisma.club.findUnique({
+            where: {
+              id: participant.clublinkId
+            }
+          });
+  
+          const modifiedParticipant = {
+            ...participant,
+            birthYear: new Date(participant.birthYear).toISOString().split('T')[0],
+            clublinkId: club ? club.name : null
+          };
+  
+          return modifiedParticipant;
+        })
+      );
+  
+      socket.emit('participantsData', participantsData);
     } catch (error) {
       console.error('Error fetching judges:', error);
     }
   });
+  socket.on('fetchEvents', async (id) => {
+    try {
+      const events = await prisma.event.findMany({
+        where: { competitionId: id },
+      });
+      
+      socket.emit('eventsData', events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  });
+  
 
   //Deleting
   socket.on('delete-participant', async ( participantID ) => {
@@ -311,6 +407,18 @@ io.on("connection", async (socket) => {
       socket.emit('club-deleted', "Deleted");
     } catch (error) {
       console.error('Error deleting club:', error);
+    }
+  });
+  socket.on('delete-competition', async (competitionID ) => {
+    try {
+      const competition = await prisma.competition.delete({
+        where: {
+          id: competitionID,
+        },
+      });
+      socket.emit('competition-deleted', "Deleted");
+    } catch (error) {
+      console.error('Error deleting competition:', error);
     }
   });
 
@@ -377,15 +485,45 @@ io.on("connection", async (socket) => {
       socket.emit("update-club-error", error);
     }
   });
-  socket.on("update-participant", async ({ id, lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group }) => {
+  socket.on("update-competition", async ({ id , name}) => {
     try {
-      const existingParticipant = await prisma.participant.findUnique({
+      // Find the competition by ID
+      const competition = await prisma.competition.findUnique({
+        where: { id: id },
+      });
+  
+      if (!competition) {
+        throw new Error("Competition not found");
+      }
+  
+      // Update the competition properties
+      competition.name = name;
+     
+      
+  
+      // Save the updated competition
+      const updatedCompetition = await prisma.competition.update({
+        where: { id: id },
+        data: competition,
+      });
+  
+      // Emit a success event back to the client
+      socket.emit("update-competition-success", updatedCompetition);
+    } catch (error) {
+      console.error(error);
+      // Emit an error event back to the client
+      socket.emit("update-competition-error", error);
+    }
+  });
+  socket.on("update-participant", async ({ id, lastName, firstName, birthYear, country, clublinkId, division, age_category, competition , event }) => {
+    try {
+      const participant = await prisma.participant.findUnique({
         where: {
           id: id,
         },
       });
   
-      if (!existingParticipant) {
+      if (!participant) {
         console.log("Participant not found!");
         return; // Exit the function if participant is not found
       }
@@ -401,24 +539,23 @@ io.on("connection", async (socket) => {
         return; // Exit the function if club is not found
       }
   
+      // Update the participant properties
+      participant.clublinkId = club.id;
+      participant.lastName = lastName;
+      participant.firstName = firstName;
+      participant.birthYear = new Date(birthYear);
+      participant.country = country;
+      participant.division = division;
+      participant.age_category = age_category;
+      participant.competition = competition;
+      participant.event = event;
+      
+      
       const updatedParticipant = await prisma.participant.update({
         where: {
-          id:id,
+          id: id,
         },
-        data: {
-          lastName,
-          firstName,
-          birthYear: new Date(birthYear), // Convert birthYear to DateTime type
-          country,
-          clublink: {
-            connect: {
-              id: club.id,
-            },
-          },
-          division,
-          age_category,
-          age_group,
-        },
+        data: participant,
       });
   
       console.log("Participant updated:", updatedParticipant);

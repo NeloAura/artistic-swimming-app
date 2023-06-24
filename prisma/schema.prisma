@@ -20,11 +20,16 @@ model Competition {
   name         String        @unique
   participants Participant[]
   users        User[]
+  events       Event[]
 }
 
 model Event {
   id           Int           @id @default(autoincrement())
-  event        String        @unique
+  competition   Competition   @relation(fields: [competitionId], references: [id] , onDelete: Cascade)
+  competitionId Int
+  name         String        @unique
+  type         String
+  time         String
   participants Participant[]
   groups       Groups[]
   scores       Score[]
@@ -39,7 +44,8 @@ model Participant {
   birthYear       DateTime?
   division        String?
   age_category    String?
-  age_group       String?
+  competition     String?
+  event           String?
   country         String?
   generatedNumber Int?
   competitions    Competition[]
@@ -62,14 +68,23 @@ model Score {
 }
 
 model User {
-  id           Int           @id @unique @default(autoincrement())
-  name         String?
-  username     String?       @unique
-  password     String?
-  role         String?       
-  competitions Competition[]
-  scores       Score[]
+  id             Int             @id @unique @default(autoincrement())
+  name           String?
+  username       String?         @unique
+  password       String?
+  role           String?
+  competitions   Competition[]
+  scores         Score[]
   configurations Configuration[]
+  types          Type[]
+
+  // TODO: Add a field for the current competition. This will be
+}
+
+model Type {
+  id             Int             @id @unique @default(autoincrement())
+  name           String?
+  users          User[]
 }
 
 model Groups {
@@ -81,9 +96,9 @@ model Groups {
 }
 
 model Configuration {
-  id           Int           @id @default(autoincrement())
-  name         String        @unique
-  value        String?
-  user         User          @relation(fields: [userId], references: [id])
-  userId       Int
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  value  String?
+  user   User    @relation(fields: [userId], references: [id])
+  userId Int
 }

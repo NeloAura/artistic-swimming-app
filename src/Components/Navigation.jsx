@@ -9,6 +9,8 @@ import {
   Avatar,
   AvatarBadge,
   Button,
+  Checkbox,
+  CheckboxGroup,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -83,9 +85,21 @@ async function registerclub(name, cellPhone, email) {
     throw new Error("Registration failed");
   }
 }
-async function registerParticipant(lastName, firstName, birthYear, country, clublinkId, division, age_category, age_group) {
+async function registercompetition(name) {
   try {
-    const result = await emit("register-participant", {
+    const result = emit("register-competition", {
+      name
+    });
+    console.log(" Competition Registration successful:", result);
+    return result;
+  } catch (error) {
+    console.error("Registration failed:", error);
+    throw new Error("Registration failed");
+  }
+}
+async function registerParticipant(lastName, firstName, birthYear, country, clublinkId, division, age_category, competition , event) {
+  try {
+    const result = emit("register-participant", {
       lastName,
       firstName,
       birthYear,
@@ -93,7 +107,8 @@ async function registerParticipant(lastName, firstName, birthYear, country, club
       clublinkId,
       division,
       age_category,
-      age_group,
+      competition,
+      event
     });
     console.log("Participant Registration successful:", result);
     return result;
@@ -111,9 +126,10 @@ function WalkthroughPopover(button) {
       initialFocusRef={initialFocusRef}
       placement="bottom"
       closeOnBlur={false}
+     
     >
       <PopoverTrigger>{button}</PopoverTrigger>
-      <PopoverContent color="white" bg="blue.800" borderColor="twiter.300">
+      <PopoverContent color="white" bg="blue.800" borderColor="twiter.300" minWidth="500px" overflowY="auto" >
         <PopoverHeader pt={4} fontWeight="bold" border="0">
           Add
         </PopoverHeader>
@@ -133,6 +149,7 @@ function WalkthroughPopover(button) {
             {ParticipantDrawer()}
             {UserDrawer()}
             {ClubDrawer()}
+            {CompetitionDrawer()}
           </ButtonGroup>
         </PopoverFooter>
       </PopoverContent>
@@ -226,9 +243,8 @@ function UserDrawer() {
 function ParticipantDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const firstField = React.useRef();
-
   const [clubs, setClubs] = React.useState([]);
-
+  const [competitions, setCompetitions] = React.useState([]);
   // Assuming you are using an asynchronous function
   const fetchClubs = async () => {
     // Perform your data fetching logic here
@@ -241,6 +257,19 @@ function ParticipantDrawer() {
       reject(error);
       socket.disconnect();
     });
+    });
+  };
+
+  const fetchCompetitions = async () => {
+    return new Promise((resolve, reject) => {
+      socket.emit("fetchCompetitions");
+      socket.on("competitionsData", (competitions) => {
+        resolve(competitions);
+      });
+      socket.on("connect_error", (error) => {
+        reject(error);
+        socket.disconnect();
+      });
     });
   };
 
@@ -257,78 +286,167 @@ function ParticipantDrawer() {
     fetchClubsData();
   }, []);
 
+  React.useEffect(() => {
+    const fetchCompetitionsData = async () => {
+      try {
+        const competitionsData = await fetchCompetitions();
+        setCompetitions(competitionsData);
+      } catch (error) {
+        console.error("Error setting competitions:", error);
+      }
+    };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const lastName = document.getElementById('lastname').value;
-    const firstName = document.getElementById('firstname').value;
-    const birthYear = document.getElementById('BirthDate').value;
-    const country = document.getElementById('country').value;
-    const clublinkId = document.getElementById('club').value;
-    const division = document.getElementById('division').value;
-    const age_category = document.getElementById('age-categorie').value;
-    const age_group = document.getElementById('age-group').value;
+    fetchCompetitionsData();
+  }, []);
 
+
+  const [formValues, setFormValues] = React.useState({
+    lastname: '',
+    firstname: '',
+    birthYear: '',
+    country: '',
+    clublinkId: '',
+    division: '',
+    age_category: '',
+    competition: '',
+    event: '',
+  });
+ 
+
+  const handleSubmit = async () => {
     try {
-     const result = await registerParticipant(
-        lastName,
-        firstName,
+      const {
+        lastname,
+        firstname,
         birthYear,
         country,
         clublinkId,
         division,
         age_category,
-        age_group
-      ).then(onClose());
-      
-      console.log("Registration successful:", result);
-      return result;
+        competition,
+        event,
+      } = formValues;
 
+      const eventString = event.join(","); // Convert event array to string separated by commas
+
+      const result = await registerParticipant(
+        lastname,
+        firstname,
+        birthYear,
+        country,
+        clublinkId,
+        division,
+        age_category,
+        competition,
+        eventString // Pass the event string to the onUpdate function
+      );
+
+      onClose();
+    
+      return result;
     } catch (error) {
-      console.error('Failed to register participant:', error);
+      console.error("Failed to update user:", error);
     }
   };
+
+  const handleChange = (field, value) => {
+    setFormValues((prevFormValues) => {
+      if ( field === 'event' ) {
+        // Checkbox field
+        const prevFieldValues = prevFormValues[field] || []; // Initialize with an empty array if the field doesn't exist
+  
+        if (prevFieldValues.includes(value)) {
+          // Checkbox is unisChecked, remove value from the array
+          const updatedValues = prevFieldValues.filter((item) => item !== value);
+          console.log(`Removed ${value} from ${field}:`, updatedValues);
+          return {
+            ...prevFormValues,
+            [field]: updatedValues,
+          };
+        } else {
+          // Checkbox is isChecked, add value to the array
+          const updatedValues = [...prevFieldValues, value];
+          console.log(`Added ${value} to ${field}:`, updatedValues);
+          return {
+            ...prevFormValues,
+            [field]: updatedValues,
+          };
+        }
+      } else {
+        // Non-checkbox field, update value directly
+        console.log(`Updated ${field} value:`, value);
+        return {
+          ...prevFormValues,
+          [field]: value,
+        };
+      }
+    });
+  };
+  
   
   return (
     <>
-      <Button colorScheme="green" onClick={onOpen}>
-        Participant{" "}
-      </Button>
-      <Drawer
-        isOpen={isOpen}
-        placement="right"
-        initialFocusRef={firstField}
-        onClose={onClose}
-      >
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader borderBottomWidth="1px">
-            Create a new Participant
-          </DrawerHeader>
-
-          <DrawerBody>
+    <Button colorScheme="green" onClick={onOpen}>
+      Participant
+    </Button>
+    <Drawer
+      isOpen={isOpen}
+      placement="right"
+      initialFocusRef={firstField}
+      onClose={onClose}
+    >
+      <DrawerOverlay />
+      <DrawerContent>
+        <DrawerCloseButton />
+        <DrawerHeader borderBottomWidth="1px">
+          Create Participant
+        </DrawerHeader>
+        <DrawerBody>
           <form onSubmit={handleSubmit}>
             <Stack spacing="24px">
               <Box>
-                <FormLabel htmlFor="lastname">Participant Lastname</FormLabel>
+                <FormLabel htmlFor={`lastname`}>
+                  Lastname
+                </FormLabel>
                 <Input
                   ref={firstField}
-                  id="lastname"
+                  id={`lastname`}
+                  value={formValues.lastname }
+                  onChange={(e) => handleChange("lastname", e.target.value)}
                   placeholder="Please enter lastname"
                 />
-                <FormLabel htmlFor="firstname">Participant Firstname</FormLabel>
-                <Input id="firstname" placeholder="Please enter firstname" />
-                <br/>
-                <br/>
-                <FormLabel htmlFor="BirthDate"> Birthyear</FormLabel>
+                <FormLabel htmlFor={`firstname`}>
+                  Firstname
+                </FormLabel>
+                <Input
+                  id={`firstname`}
+                  value={formValues.firstname }
+                  onChange={(e) => handleChange("firstname", e.target.value)}
+                  placeholder="Please enter firstname"
+                />
+                <br />
+                <br />
+                <FormLabel htmlFor={`BirthDate`}>
+                  {" "}
+                  Birthyear
+                </FormLabel>
                 <Input
                   type="date"
-                  id="BirthDate"
+                  id={`BirthDate`}
+                  value={formValues.birthYear }
+                  onChange={(e) => handleChange("birthYear", e.target.value)}
                   placeholder="BirthDate"
-                ></Input>
-                <FormLabel htmlFor="country">Country</FormLabel>
-                <Select id="country" defaultValue="Curacao">
+                />
+
+                <FormLabel htmlFor={`country`}>
+                  Country
+                </FormLabel>
+                <Select
+                  id={`country`}
+                  placeholder="Please Choose Country"
+                  value={formValues.country ?? "Curacao"}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                >
                   <option value="Curacao">Curacao</option>
                   <option value="Bonaire">Bonaire</option>
                   <option value="Aruba">Aruba</option>
@@ -337,64 +455,134 @@ function ParticipantDrawer() {
               </Box>
               <Box></Box>
               <Box>
-                <FormLabel htmlFor="club">Select Club</FormLabel>
-                <Select id="club">
+                <FormLabel htmlFor={`club`}>
+                  Select Club
+                </FormLabel>
+                <Select
+                  id={`club`}
+                  placeholder="Please Choose Club "
+                  value={formValues.clublinkId }
+                  onChange={(e) => handleChange("clublinkId", e.target.value)}
+                >
                   {clubs.map((club) => (
                     <option key={club.id} value={club.name}>
                       {club.name}
                     </option>
                   ))}
                 </Select>
-                <br/>
-                <FormLabel htmlFor="division">Select Division</FormLabel>
-                <Select id="division" defaultValue="awd">
+                <br />
+                <FormLabel htmlFor={`division`}>
+                  Select Division
+                </FormLabel>
+                <Select
+                  id={`division`}
+                  placeholder="Please Choose Division "
+                  value={formValues.division ?? "awd"}
+                  onChange={(e) => handleChange("division", e.target.value)}
+                >
                   <option value="awd">AWD</option>
                   <option value="novice-a">Novice-A</option>
                   <option value="novice-b">Novice-B</option>
                   <option value="age-group">Age-Group</option>
                 </Select>
-                <br/>
-                <FormLabel htmlFor="age-categorie">
+                <br />
+                <FormLabel htmlFor={`age-categorie`}>
                   Select AgeCategorie
                 </FormLabel>
-                <Select id="age-categorie" defaultValue="AWD-6&Under">
-                  <option value="AWD-6&Under">AWD-6&Under</option>
-                  <option value="AWD-7&8">AWD-7&8</option>
-                  <option value="AWD-9&10">AWD-9&10</option>
-                  <option value="AWD-11&12">AWD-11&12</option>
-                  <option value="AWD-13&Over">AWD-13&Over</option>
+                <Select
+                  id={`age-categorie`}
+                  placeholder="Please Choose AgeCategorie"
+                  value={formValues.age_category ?? "AWD-NoAgeLimit"}
+                  onChange={(e) =>
+                    handleChange("age_category", e.target.value)
+                  }
+                >
+                  <option value="AWD-NoAgeLimit">AWD-NoAgeLimit</option>
                   <option value="Novice-6&Under">Novice-6&Under</option>
                   <option value="Novice-7&8">Novice-7&8</option>
                   <option value="Novice-9&10">Novice-9&10</option>
                   <option value="Novice-11&12">Novice-11&12</option>
                   <option value="Novice-13&Over">Novice-13&Over</option>
+                  <option value="AgeGroup-10&Under">AgeGroup-10&Under</option>
+                  <option value="AgeGroup-12&Under">AgeGroup-12&Under</option>
+                  <option value="AgeGroup-Youth">AgeGroup-Youth</option>
+                  <option value="AgeGroup-Senior">AgeGroup-Senior</option>
                 </Select>
-                <br/>
-                <FormLabel htmlFor="age-group">
-                  Select AgeGroup
+                <br />
+                <FormLabel htmlFor={`competition`}>
+                  Select Competition
                 </FormLabel>
-                <Select id="age-group" defaultValue="10&Under">
-                  <option value="10&Under">10&Under</option>
-                  <option value="12&Under">12&Under</option>
-                  <option value="Youth">Youth</option>
-                  <option value="Senior">Senior</option>
+                <Select
+                  id={`competition`}
+                  placeholder="Please Choose Competition "
+                  value={formValues.competition }
+                  onChange={(e) =>
+                    handleChange("competition", e.target.value)
+                  }
+                >
+                  {competitions.map((competition) => (
+                    <option key={competition.id} value={competition.name}>
+                      {competition.name}
+                    </option>
+                  ))}
                 </Select>
+                <br />
+
+                <FormLabel htmlFor={`event`}>
+                  Select Events
+                </FormLabel>
+                <CheckboxGroup colorScheme="green" defaultValue={[]}>
+                  <Stack spacing={[1, 5]} direction={["flex-row"]}>
+                    <Checkbox
+                      value="solo"
+                      id={`event1`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("solo")}
+                      
+                    >
+                      Solo
+                    </Checkbox>
+                    <Checkbox
+                      value="duet"
+                      id={`event2`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("duet")}
+                    >
+                      Duo
+                    </Checkbox>
+                    <Checkbox
+                      value="mixDuet"
+                      id={`event3`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("mixDuet")}
+                    >
+                      Mix Duet
+                    </Checkbox>
+                    <Checkbox
+                      value="team"
+                      id={`event4`}
+                      onChange={(e) => handleChange("event", e.target.value)}
+                      isChecked={formValues.event.includes("team")}
+                    >
+                      Team
+                    </Checkbox>
+                  </Stack>
+                </CheckboxGroup>
               </Box>
             </Stack>
-            <br/>
-            <Button colorScheme="blue" type="submit">Submit</Button>
-            </form>
-          </DrawerBody>
-
-          <DrawerFooter borderTopWidth="1px">
-            <Button variant="outline" mr={3} onClick={onClose}>
-              Cancel
+            <Button mt={4} colorScheme="blue" type="submit">
+              Create
             </Button>
-            
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </>
+          </form>
+        </DrawerBody>
+        <DrawerFooter borderTopWidth="1px">
+          <Button variant="outline" mr={3} onClick={onClose}>
+            Cancel
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  </>
   );
 }
 function ClubDrawer() {
@@ -458,6 +646,70 @@ function ClubDrawer() {
                     id="email"
                     placeholder="Please enter email"
                   />
+                </Box>
+              </Stack>
+              <Button mt={4} colorScheme="blue" type="submit">
+                Submit
+              </Button>
+            </form>
+          </DrawerBody>
+
+          <DrawerFooter borderTopWidth="1px">
+            <Button variant="outline" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
+}
+function CompetitionDrawer() {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const firstField = React.useRef();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const name = document.getElementById("name").value;
+   
+
+    try {
+      const result = await registercompetition(name).then(onClose());
+
+      console.log("Registration successful:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed to register :", error);
+    }
+  };
+  return (
+    <>
+      <Button colorScheme="yellow" onClick={onOpen}>
+        Competition{" "}
+      </Button>
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        initialFocusRef={firstField}
+        onClose={onClose}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">
+            Create a new Competition
+          </DrawerHeader>
+
+          <DrawerBody>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing="24px">
+                <Box>
+                  <FormLabel htmlFor="name">Name</FormLabel>
+                  <Input
+                    ref={firstField}
+                    id="name"
+                    placeholder="Please enter Competition Name"
+                  />
+
                 </Box>
               </Stack>
               <Button mt={4} colorScheme="blue" type="submit">
