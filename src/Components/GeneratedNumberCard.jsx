@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import {
   ChakraProvider,
-  SimpleGrid,
   TableContainer,
   Table,
   TableCaption,
