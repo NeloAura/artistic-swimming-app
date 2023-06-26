@@ -1,5 +1,5 @@
-import React, { useState , useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 
 import {
   ChakraProvider,
@@ -11,44 +11,50 @@ import {
   Avatar,
   Text,
   IconButton,
-} from '@chakra-ui/react';
-import { CheckCircleIcon } from '@chakra-ui/icons';
-import adminAvatar from '../assets/images/BBS.jpg';
-import { emit } from '../socket_io.js';
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  CloseButton,
+} from "@chakra-ui/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
+import adminAvatar from "../assets/images/BBS.jpg";
+import { emit } from "../socket_io.js";
 import { socket } from "../socket_io";
+
 //functions
 async function authenticate(username, password) {
-  return emit('authenticate', { username, password });
+  return emit("authenticate", { username, password });
 }
 
 const LoginComp = () => {
   const [authenticated, setAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginStatus, setLoginStatus] = useState(null);
 
   useEffect(() => {
     socket.on("status", (status) => {
       if (status === "200") {
         setAuthenticated(true);
-        console.log("Authentication succesfull")
+        setLoginStatus("success");
+      } else if (status === "401") {
+        setLoginStatus("failure");
       }
     });
   }, []);
 
   const handleLogin = async () => {
-    // Perform authentication check here
-    // If authentication succeeds, set authenticated to true
     try {
       await authenticate(username, password);
-      
-      
     } catch (error) {
       console.error(error);
     }
   };
 
-  
+  const handleCloseAlert = () => {
+    setLoginStatus(null);
+  };
 
   if (authenticated) {
     return <Navigate to="/dashboard" />;
@@ -88,11 +94,18 @@ const LoginComp = () => {
           />
           <InputGroup>
             <InputLeftAddon backgroundColor="red.400">User</InputLeftAddon>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
           </InputGroup>
-          <InputGroup mt={5} mb={6}>
+          <InputGroup mt={4} >
             <InputLeftAddon backgroundColor="red.400">Pass</InputLeftAddon>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </InputGroup>
           <IconButton
             aria-label="icon"
@@ -111,6 +124,24 @@ const LoginComp = () => {
             bgGradient="linear(to bottom right, red.500,red.300)"
             onClick={handleLogin}
           />
+          <Box>
+          {loginStatus === "success" && (
+            <AlertDialog
+              status="success"
+              title="Success!"
+              description="User has been logged in successfully."
+              onClose={handleCloseAlert}
+            />
+          )}
+          {loginStatus === "failure" && (
+            <AlertDialog
+              status="error"
+              title="Error!"
+              description="Invalid username or password."
+              onClose={handleCloseAlert}
+            />
+          )}
+          </Box>
         </Container>
       </Box>
     </ChakraProvider>
@@ -118,3 +149,23 @@ const LoginComp = () => {
 };
 
 export default LoginComp;
+
+const AlertDialog = ({ status, title, description, onClose }) => (
+  <Alert 
+  mt={4}
+  borderRadius='md'
+  status={status}>
+    <AlertIcon />
+    <Box>
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>{description}</AlertDescription>
+    </Box>
+    <CloseButton
+      alignSelf="flex-start"
+      position="relative"
+      right={-1}
+      top={-1}
+      onClick={onClose}
+    />
+  </Alert>
+);
