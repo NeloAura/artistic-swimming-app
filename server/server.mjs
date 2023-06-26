@@ -71,6 +71,25 @@ async function createDefaultUser() {
   }
 }
 
+async function createTypes() {
+  const judgeTypes = ["execution", "difficulty", "artisticExpression", "artisticImpressions"];
+
+  await Promise.all(judgeTypes.map(async (type) => {
+    const existingType = await prisma.type.findUnique({ where: { name: type } });
+    
+    if (!existingType) {
+      await prisma.type.create({
+        data: {
+          name: type,
+        },
+      });
+    }
+  }));
+
+  console.log("Judge types created");
+}
+
+
 const secretCode = generateSecretCode();
 
 io.on("connection", async (socket) => {
@@ -83,11 +102,58 @@ io.on("connection", async (socket) => {
   socket.emit("ipAddress", ipAddress);
   socket.emit("secretCode", secretCode);
 
+  const MAX_NUMBER = 100; // Maximum number for random generation
+
+  socket.on('assign-random-numbers', async () => {
+    try {
+      // Fetch all participants and groups from the database
+      const participants = await prisma.participant.findMany();
+      const groups = await prisma.groups.findMany();
+  
+      // Assign unique random numbers to participants
+      participants.forEach((participant) => {
+        participant.generatedNumber = generateRandomNumber(100);
+      });
+  
+      // Assign unique random numbers to groups
+      groups.forEach((group) => {
+        group.generatedNumber = generateRandomNumber(100);
+      });
+  
+      // Update the participants and groups in the database with the generated numbers
+      await prisma.$transaction([
+        ...participants.map((participant) =>
+          prisma.participant.update({
+            where: { id: participant.id },
+            data: { generatedNumber: participant.generatedNumber },
+          })
+        ),
+        ...groups.map((group) =>
+          prisma.groups.update({
+            where: { id: group.id },
+            data: { generatedNumber: group.generatedNumber },
+          })
+        ),
+      ]);
+  
+      console.log('Random numbers assigned successfully');
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  
+  // Function to generate a random number within a given range
+  function generateRandomNumber(range) {
+    return Math.floor(Math.random() * range) + 1;
+  }
+  
+  
+
   //Special-Requests
   socket.on("ipAddress-r", () => {
     socket.emit("ipAddress", ipAddress);
     });
-    socket.on("secretCode-r", () => {
+  socket.on("secretCode-r", () => {
       socket.emit("secretCode", secretCode);
     });
 
@@ -246,37 +312,77 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
-  socket.on("register-competition", async ({ name}) => {
+  socket.on("register-competition", async ({ name }) => {
     try {
-      // Check if the username already exists
+      // Check if the competition already exists
       const existingCompetition = await prisma.competition.findUnique({
-        where: { name: name },
+        where: { name },
       });
-
+  
       if (existingCompetition) {
-        throw "Competition Already exists";
+        throw new Error("Competition already exists");
       }
-
-      // Hash the password
-      
-
-      // Create the new user
+  
+      // Create the new competition
       const newCompetition = await prisma.competition.create({
         data: {
           name,
-          
-           // set the role to "judge" if it's not provided
         },
       });
+  
+      // Define the divisions, age categories, and types
+      const divisions = ["AWD", "Novice-A", "Novice-B", "Age Group"];
+      const ageCategories = {
+         AWD: ["noagelimit"],
+        "Novice-A": ["6&Under", "7&8", "9&10", "11&12", "13&O"],
+        "Novice-B": ["6&Under", "7&8", "9&10", "11&12", "13&O"],
+        "Age Group": ["10&Under", "12&Under", "Youth", "Junior", "Senior"],
+      };
+      const types = {
+        AWD: ["Solo", "Duet", "Mix duet", "Team"],
+        "Novice-A": ["Solo", "Duet", "Mix duet", "Team"],
+        "Novice-B": ["Solo", "Duet", "Mix duet", "Team"],
+        "Age Group": ["Solo", "Male Solo", "Mix duet", "Duet", "Team"],
+      };
+  
+      // Create template events for each combination of division, age category, and type
+      const templateEvents = [];
+      divisions.forEach((division) => {
+        const divisionAgeCategories = ageCategories[division];
+        divisionAgeCategories.forEach((ageCategory) => {
+          const divisionTypes = types[division];
+          divisionTypes.forEach((type) => {
+            const eventName = `${division}-${ageCategory}`;
+            const templateEvent = {
+              name: eventName,
+              division:division,
+              age_categorie: ageCategory,
+              type:type,
+              competitionId: newCompetition.id,
+              startTime:"...",
+              endTime:"..."
+            };
+            templateEvents.push(templateEvent);
+          });
+        });
+      });
+  
+      // Create template events in the database
+      await Promise.all(templateEvents.map((event) => prisma.event.create({ data: event })));
+  
+      console.log("Competition created with template events");
     } catch (error) {
       console.error(error);
     }
   });
-  socket.on("register-event", async ({ id, name, type, time }) => {
+  
+  
+  
+  socket.on("register-event", async ({ id,  name, division , age_categorie, type, startTime , endTime}) => {
     try {
       // Check if the event already exists
       const existingEvent = await prisma.event.findUnique({
-        where: { name: name },
+        where: { id: id },
       });
   
       if (existingEvent) {
@@ -286,9 +392,12 @@ io.on("connection", async (socket) => {
       // Create the new event and associate it with the provided CompetitionID
       const newEvent = await prisma.event.create({
         data: {
-          name,
-          type,
-          time,
+          name:name,
+          division:division,
+          age_categorie:age_categorie,
+          type:type,
+          startTime:startTime , 
+          endTime:endTime,
           competition: {
             connect: { id: id },
           },
@@ -322,6 +431,15 @@ io.on("connection", async (socket) => {
       socket.emit('clubsData', clubs);
     } catch (error) {
       console.error('Error fetching judges:', error);
+    }
+  });
+  socket.on('fetchGroups', async () => {
+    try {
+      const groups = await prisma.groups.findMany();
+      
+      socket.emit('groupsData', groups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
     }
   });
   socket.on('fetchCompetitions', async () => {
@@ -485,6 +603,37 @@ io.on("connection", async (socket) => {
       socket.emit("update-club-error", error);
     }
   });
+  socket.on("update-event", async ({ id, name, startTime,endTime}) => {
+    try {
+      // Find the event by ID
+      const event = await prisma.event.findUnique({
+        where: { id: id },
+      });
+  
+      if (!event) {
+        throw new Error("Event not found");
+      }
+  
+      // Update the event properties
+      event.name = name;
+      event.startTime = startTime;
+      event.endTime =endTime;
+      
+  
+      // Save the updated event
+      const updatedEvent = await prisma.event.update({
+        where: { id: id },
+        data: event,
+      });
+  
+      // Emit a success event back to the client
+      socket.emit("update-event-success", updatedEvent);
+    } catch (error) {
+      console.error(error);
+      // Emit an error event back to the client
+      socket.emit("update-event-error", error);
+    }
+  });
   socket.on("update-competition", async ({ id , name}) => {
     try {
       // Find the competition by ID
@@ -550,7 +699,7 @@ io.on("connection", async (socket) => {
       participant.competition = competition;
       participant.event = event;
       
-      
+
       const updatedParticipant = await prisma.participant.update({
         where: {
           id: id,
@@ -563,11 +712,6 @@ io.on("connection", async (socket) => {
       console.error(error);
     }
   });
-  
-  
-
-
-
 });
 
 // wifi setup

@@ -73,13 +73,17 @@ async function updateCompetition(CompetitionID, name) {
     throw new Error("Update failed");
   }
 }
-async function createEvent(CompetitionID, name, type, time) {
+async function createEvent(CompetitionID,  name, division , age_category, type, start_time , end_time) {
   try {
     const result = emit("register-event", {
       id: CompetitionID,
-      name,
-      type,
-      time,
+      name:name,
+      division: division,
+      age_categorie: age_category,
+      type :type,
+      startTime:start_time,
+      endTime:end_time
+
     });
     console.log("Update successful:", CompetitionID);
     return result;
@@ -230,14 +234,18 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
   const [formValues, setFormValues] = React.useState({
     name: "",
     type: "",
-    time: "",
+    start_time: "",
+    end_time: "",
+    division: "",
+    age_category:"",
+
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { name, type, time } = formValues;
-      const result = await onCreate(CompetitionID, name, type, time);
+      const { name, type, start_time , end_time , division , age_category } = formValues;
+      const result = await onCreate(CompetitionID, name, division , age_category, type, start_time , end_time );
       onClose();
       console.log("Event creation successful:", result);
     } catch (error) {
@@ -280,7 +288,46 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
                     placeholder="Please enter Event name"
                   />
                 </Box>
+                <br/>
                 <Box>
+                
+                <FormLabel htmlFor={`division_${CompetitionID}`}>
+                    Select Division
+                  </FormLabel>
+                  <Select
+                    id={`division_${CompetitionID}`}
+                    placeholder="Please Choose Division"
+                    value={formValues.division}
+                    onChange={(e) => handleChange("division", e.target.value)}
+                  >
+                    <option value="AWD">AWD</option>
+                    <option value="Novice-A">Novice-A</option>
+                    <option value="Novice-B">Novice-B</option>
+                    <option value="Age Group">Age-Group</option>
+                  </Select>
+                  <FormLabel htmlFor={`age-categorie_${CompetitionID}`}>
+                    Select AgeCategorie
+                  </FormLabel>
+                  <Select
+                    id={`age-categorie_${CompetitionID}`}
+                    placeholder="Please Choose AgeCategory"
+                    value={formValues.age_category}
+                    onChange={(e) =>
+                      handleChange("age_category", e.target.value)
+                    }
+                  >
+                    <option value="noagelimit">AWD-NoAgeLimit</option>
+                    <option value="6&Under">Novice-6&Under</option>
+                    <option value="7&8">Novice-7&8</option>
+                    <option value="9&10">Novice-9&10</option>
+                    <option value="11&12">Novice-11&12</option>
+                    <option value="13&O">Novice-13&Over</option>
+                    <option value="10&Under">AgeGroup-10&Under</option>
+                    <option value="12&Under">AgeGroup-12&Under</option>
+                    <option value="Youth">AgeGroup-Youth</option>
+                    <option value="Junior">AgeGroup-Junior</option>
+                    <option value="Senior">AgeGroup-Senior</option>
+                  </Select>
                   <FormLabel htmlFor={`type_${CompetitionID}`}>Type</FormLabel>
                   <Select
                     id={`type_${CompetitionID}`}
@@ -289,19 +336,28 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
                     placeholder="Please select Event type"
                   >
                     <option value="Solo">Solo</option>
-                    <option value="Duo">Duo</option>
-                    <option value="Trio">Trio</option>
-                    <option value="Mixed">Mixed</option>
+                    <option value="Duet">Duet</option>
+                    <option value="Mix duet">Mixed duet</option>
+                    <option value="Team">Team</option>
+                    <option value="Male Solo">Male Solo</option>
+
                   </Select>
-                </Box>
-                <Box>
-                  <FormLabel htmlFor={`time_${CompetitionID}`}>Time</FormLabel>
+                  <br />
+                  <FormLabel htmlFor={`start_time_${CompetitionID}`}>StartTime</FormLabel>
                   <Input
                     type="Time"
-                    id={`time_${CompetitionID}`}
+                    id={`start_time_${CompetitionID}`}
                     value={formValues.time}
-                    onChange={(e) => handleChange("time", e.target.value)}
+                    onChange={(e) => handleChange("start_time", e.target.value)}
                   />
+                  <FormLabel htmlFor={`end_time_${CompetitionID}`}>EndTime</FormLabel>
+                  <Input
+                    type="Time"
+                    id={`end_time_${CompetitionID}`}
+                    value={formValues.time}
+                    onChange={(e) => handleChange("end_time", e.target.value)}
+                  />
+                  
                 </Box>
               </Stack>
               <Button mt={4} colorScheme="blue" type="submit">
@@ -367,9 +423,9 @@ const CompetitionCard = () => {
     }
   };
 
-  const handleCreateEvent = async (CompetitionID, name, type, time) => {
+  const handleCreateEvent = async (CompetitionID, name, division , age_category, type, start_time , end_time) => {
     try {
-      return await createEvent(CompetitionID, name, type, time);
+      return await createEvent(CompetitionID,name, division , age_category, type, start_time , end_time);
     } catch (error) {
       console.error("Error updating Event:", error);
     }

@@ -37,10 +37,10 @@ import { useParams } from "react-router-dom";
 
 
 const fetchEvent = async (competitionID) => {
-  const parsedCompetitionID = parseInt(competitionID, 10); // Convert competitionID to an integer
+  const parsedEventID = parseInt(competitionID, 10); // Convert competitionID to an integer
 
   return new Promise((resolve, reject) => {
-    socket.emit("fetchEvents", parsedCompetitionID); // Pass the converted competition ID to the server
+    socket.emit("fetchEvents", parsedEventID); // Pass the converted competition ID to the server
     socket.on("eventsData", (events) => {
       resolve(events);
     });
@@ -54,7 +54,7 @@ const fetchEvent = async (competitionID) => {
 
 async function deleteEvent(eventID) {
   try {
-    const result = await emit("delete-event", eventID);
+    const result = emit("delete-event", eventID);
     console.log("Event deleted successfully:", result);
     return result;
   } catch (error) {
@@ -63,13 +63,13 @@ async function deleteEvent(eventID) {
   }
 }
 
-async function updateEvent(EventID, name, cellPhone, email) {
+async function updateEvent(EventID, name, start_time, end_time) {
   try {
     const result = emit("update-event", {
       id: EventID,
-      name,
-      cellPhone,
-      email,
+      name:name,
+      startTime:start_time,
+      endTime:end_time,
     });
     console.log("Update successful:", EventID);
     return result;
@@ -125,8 +125,8 @@ const DeletePopover = ({ button, initialFocusRef, EventID, onDelete }) => {
 
 function EventForm({
   initialName,
-  initialCellPhone,
-  initialEmail,
+  initialStartTime,
+  initialEndTime,
   isOpen,
   onOpen,
   onClose,
@@ -136,24 +136,24 @@ function EventForm({
   const firstField = React.useRef();
   const [formValues, setFormValues] = React.useState({
     name: initialName,
-    cellPhone: initialCellPhone,
-    email: initialEmail,
+    start_time: initialStartTime,
+    end_time: initialEndTime,
   });
 
   React.useEffect(() => {
     if (isOpen) {
       setFormValues({
         name: initialName,
-        cellPhone: initialCellPhone,
-        email: initialEmail,
+        start_time: initialStartTime,
+        end_time: initialEndTime,
       });
     }
-  }, [isOpen, initialName, initialCellPhone, initialEmail]);
+  }, [isOpen, initialName, initialStartTime, initialEndTime]);
 
   const handleSubmit = async () => {
     try {
-      const { name, cellPhone, email } = formValues;
-      const result = await onUpdate(EventID, name, cellPhone, email);
+      const { name, start_time, end_time } = formValues;
+      const result = await onUpdate(EventID, name, start_time, end_time);
       onClose();
       console.log("Update successful:", EventID);
       return result;
@@ -198,22 +198,19 @@ function EventForm({
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="Please enter Event name"
                   />
-                  <FormLabel htmlFor={`cellPhone_${EventID}`}>
-                    Phone
-                  </FormLabel>
+                  <FormLabel htmlFor={`time_${EventID}`}>StartTime</FormLabel>
                   <Input
-                    type="tel"
-                    id={`cellPhone_${EventID}`}
-                    value={formValues.cellPhone}
-                    onChange={(e) => handleChange("cellPhone", e.target.value)}
-                    placeholder="phone number"
+                    type="Time"
+                    id={`starttime_${EventID}`}
+                    value={formValues.start_time}
+                    onChange={(e) => handleChange("start_time", e.target.value)}
                   />
-                  <FormLabel htmlFor={`email_${EventID}`}>email</FormLabel>
+                  <FormLabel htmlFor={`time_${EventID}`}>EndTime</FormLabel>
                   <Input
-                    id={`email_${EventID}`}
-                    value={formValues.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="Please enter email"
+                    type="Time"
+                    id={`endtime_${EventID}`}
+                    value={formValues.end_time}
+                    onChange={(e) => handleChange("end_time", e.target.value)}
                   />
                 </Box>
               </Stack>
@@ -260,17 +257,17 @@ const EventCard = () => {
     }
   };
 
-  const handleUpdateEvent = async (EventID, name, cellPhone, email) => {
+  const handleUpdateEvent = async (EventID, name, start_time, end_time) => {
     try {
-      await updateEvent(EventID, name, cellPhone, email);
+      await updateEvent(EventID, name, start_time, end_time);
       setEvents((prevEvent) =>
         prevEvent.map((Event) => {
           if (Event.id === EventID) {
             return {
               ...Event,
               name,
-              cellPhone,
-              email,
+              start_time,
+              end_time,
             };
           }
           return Event;
@@ -326,7 +323,7 @@ const EventCardItem = ({ event, onDelete, onUpdate }) => {
         <Text as="b">{event.name}</Text>
         <br />
         <Badge variant="solid" colorScheme="blue">
-        {event.time}
+        {event.startTime}-{event.endTime}
         </Badge>
       </CardBody>
       <CardFooter alignItems="center" justifyContent="center">
@@ -336,8 +333,8 @@ const EventCardItem = ({ event, onDelete, onUpdate }) => {
             onOpen={handleOpen}
             onClose={handleClose}
             initialName={event.name}
-            initialType={event.type}
-            initialEmail={event.email}
+            initialStartTime={event.startTime}
+            initialEndTime={event.endTime}
             EventID={event.id}
             onUpdate={onUpdate}
           />
