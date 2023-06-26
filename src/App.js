@@ -8,6 +8,7 @@ import ParticipantCard from './Components/ParticipantCard';
 import Dashboard from './Components/Dashboard';
 import ClubCard from './Components/ClubCard';
 import EventsCard from './Components/EventCard';
+import GeneratedNumberCard from './Components/GeneratedNumberCard';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/participant" element={<ParticipantCard />} />
         <Route path="/club" element={<ClubCard />} />
         <Route path="/events/:competitionID" element={<EventsCard />} />
+        <Route path="/generated" element={<GeneratedNumberCard />} />
       </Routes>
     </div>
   );

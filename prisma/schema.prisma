@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+  
 }
 
 model Club {
@@ -27,9 +28,13 @@ model Event {
   id           Int           @id @default(autoincrement())
   competition   Competition   @relation(fields: [competitionId], references: [id] , onDelete: Cascade)
   competitionId Int
-  name         String        @unique
+  name         String        
+  division     String
+  age_categorie String
   type         String
-  time         String
+  startTime    String
+  endTime      String
+
   participants Participant[]
   groups       Groups[]
   scores       Score[]
