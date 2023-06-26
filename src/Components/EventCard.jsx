@@ -34,6 +34,7 @@ import { SunIcon, DeleteIcon } from "@chakra-ui/icons";
 import NavigationComp from "./Navigation";
 import { socket, emit } from "../socket_io";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 const fetchEvent = async (competitionID) => {
@@ -291,6 +292,7 @@ const EventCard = () => {
           <EventCardItem
             key={event.id}
             event={event}
+            competitionID={competitionID}
             onDelete={handleDeleteEvent}
             onUpdate={handleUpdateEvent}
           />
@@ -301,8 +303,14 @@ const EventCard = () => {
 };
 
 // Event card item component
-const EventCardItem = ({ event, onDelete, onUpdate }) => {
+const EventCardItem = ({ event,competitionID, onDelete, onUpdate }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleOpenEvents = () => {
+    const combinedParams = `${event.id},${competitionID},${event.division},${event.age_categorie},${event.type}`;
+    navigate(`/participant-on-event/${combinedParams}`);
+  };
 
   const handleOpen = () => {
     setIsOpen(true);

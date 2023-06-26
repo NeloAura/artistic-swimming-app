@@ -156,6 +156,38 @@ io.on("connection", async (socket) => {
   socket.on("secretCode-r", () => {
       socket.emit("secretCode", secretCode);
     });
+  socket.on("fetch-participants", async ({ eventId, competitionId, division, age_categorie, type }) => {
+      try {
+        // Fetch the event
+        const event = await prisma.event.findUnique({
+          where: { id: eventId },
+        });
+    
+        if (!event) {
+          throw new Error("Event not found");
+        }
+    
+        // Fetch participants matching the conditions
+        const participants = await prisma.participant.findMany({
+          where: {
+            competitionId,
+            division,
+            age_category: age_categorie,
+            type,
+            NOT: {
+              groups: {
+                some: {},
+              },
+            },
+          },
+        });
+    
+        console.log("Fetched participants:", participants);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    
 
 
   //Authentication

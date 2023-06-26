@@ -20,6 +20,7 @@ function App() {
         <Route path="/participant" element={<ParticipantCard />} />
         <Route path="/club" element={<ClubCard />} />
         <Route path="/events/:competitionID" element={<EventsCard />} />
+        <Route path="/participant-on-event/:combinedParams" element={<EventsCard />} />
         <Route path="/generated" element={<GeneratedNumberCard />} />
       </Routes>
     </div>
