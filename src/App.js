@@ -9,6 +9,7 @@ import Dashboard from './Components/Dashboard';
 import ClubCard from './Components/ClubCard';
 import EventsCard from './Components/EventCard';
 import GeneratedNumberCard from './Components/GeneratedNumberCard';
+import ParticipantOnEventCard from './Components/ParticipantOnEventCard';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
         <Route path="/participant" element={<ParticipantCard />} />
         <Route path="/club" element={<ClubCard />} />
         <Route path="/events/:competitionID" element={<EventsCard />} />
-        <Route path="/participant-on-event/:combinedParams" element={<EventsCard />} />
+        <Route path="/participant-on-event/:combinedParams" element={<ParticipantOnEventCard />} />
         <Route path="/generated" element={<GeneratedNumberCard />} />
       </Routes>
     </div>

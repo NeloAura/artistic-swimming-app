@@ -29,8 +29,10 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
+  Select,
+  IconButton
 } from "@chakra-ui/react";
-import { SunIcon, DeleteIcon } from "@chakra-ui/icons";
+import { SunIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import NavigationComp from "./Navigation";
 import { socket, emit } from "../socket_io";
 import { useParams } from "react-router-dom";
@@ -52,6 +54,32 @@ const fetchEvent = async (competitionID) => {
   });
 };
 
+const fetchJudges = async () => {
+  return new Promise((resolve, reject) => {
+    socket.emit('fetchJudges');
+    socket.on('judgesData', (judges) => {
+      resolve(judges);
+    });
+    socket.on('connect_error', (error) => {
+      reject(error);
+      socket.disconnect();
+    });
+  });
+};
+
+const fetchTypes = async () => {
+  return new Promise((resolve, reject) => {
+    socket.emit('fetchTypes');
+    socket.on('typesData', (types) => {
+      resolve(types);
+    });
+    socket.on('connect_error', (error) => {
+      reject(error);
+      socket.disconnect();
+    });
+  });
+};
+
 
 async function deleteEvent(eventID) {
   try {
@@ -63,6 +91,20 @@ async function deleteEvent(eventID) {
     throw new Error("Delete failed");
   }
 }
+
+async function assignJudgeEvent(EventID, name, type) {
+  try {
+    console.log(EventID, name, type)
+    const result = emit("assign-event", {id:EventID, name:name, type:type});
+    console.log("Event assigned successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Assign failed:", error);
+    throw new Error("Assign failed");
+  }
+}
+
+
 
 async function updateEvent(EventID, name, start_time, end_time) {
   try {
@@ -231,6 +273,126 @@ function EventForm({
   );
 }
 
+function AssignJudgeEventForm({ isOpen, onOpen, onClose, EventID, onCreate }) {
+  const firstField = React.useRef();
+  const [formValues, setFormValues] = React.useState({
+    name: "",
+    type: "",
+  });
+  const [judges, setJudges] = useState([]);
+  const [types, setTypes] = useState([]);
+
+  useEffect(() => {
+    const fetchJudgesData = async () => {
+      try {
+        const judgesData = await fetchJudges();
+        setJudges(judgesData);
+      } catch (error) {
+        console.error('Error setting judges:', error);
+      }
+    };
+
+    fetchJudgesData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTypesData = async () => {
+      try {
+        const typesData = await fetchTypes();
+        setTypes(typesData);
+      } catch (error) {
+        console.error('Error setting types:', error);
+      }
+    };
+
+    fetchTypesData();
+  }, []);
+
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { name, type } = formValues;
+      const result = await onCreate(EventID, name, type );
+      onClose();
+      console.log("Event Linked successful:", result);
+    } catch (error) {
+      console.error("Failed to link event:", error);
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setFormValues((prevFormValues) => ({
+      ...prevFormValues,
+      [field]: value,
+    }));
+  };
+
+  return (
+    <>
+      <IconButton icon={<AddIcon /> } colorScheme="green" onClick={onOpen} />
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        initialFocusRef={firstField}
+        onClose={onClose}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">Assign Judge </DrawerHeader>
+          <DrawerBody>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing="24px">
+                <Box>
+                  <Select
+                    id={`name_${EventID}`}
+                    placeholder="Please Choose Judge"
+                    value={formValues.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                  >
+                    {judges.map((judge) => (
+                      <option key={judge.id} >
+                        {judge.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <FormLabel htmlFor={`type_${EventID}`}>
+                    Select Type
+                  </FormLabel>
+                  <Select
+                    id={`type_${EventID}`}
+                    placeholder="Please Choose Type"
+                    value={formValues.type}
+                    onChange={(e) =>
+                      handleChange("type", e.target.value)
+                    }
+                  >
+                    {types.map((type) => (
+                      <option key={type.id} >
+                        {type.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Box>
+              </Stack>
+              <Button mt={4} colorScheme="blue" type="submit">
+                Create
+              </Button>
+            </form>
+          </DrawerBody>
+          <DrawerFooter borderTopWidth="1px">
+            <Button variant="outline" mrparticipant={3} onClick={onClose}>
+              Cancel
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
+}
+
 const EventCard = () => {
   const [events, setEvents] = React.useState([]);
   const { competitionID } = useParams();
@@ -253,6 +415,14 @@ const EventCard = () => {
       await deleteEvent(eventID);
       const updatedEvent = events.filter((event) => event.id !== eventID);
       setEvents(updatedEvent);
+    } catch (error) {
+      console.error("Error deleting event:", error);
+    }
+  };
+
+  const handleAssignJudge = async (EventID, name, type) => {
+    try {
+      await assignJudgeEvent(EventID, name, type);
     } catch (error) {
       console.error("Error deleting event:", error);
     }
@@ -295,6 +465,7 @@ const EventCard = () => {
             competitionID={competitionID}
             onDelete={handleDeleteEvent}
             onUpdate={handleUpdateEvent}
+            onCreate={handleAssignJudge}
           />
         ))}
       </SimpleGrid>
@@ -303,29 +474,39 @@ const EventCard = () => {
 };
 
 // Event card item component
-const EventCardItem = ({ event,competitionID, onDelete, onUpdate }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const EventCardItem = ({ event,competitionID, onDelete, onUpdate , onCreate }) => {
   const navigate = useNavigate();
-  
-  const handleOpenEvents = () => {
+  const [isAssignFormOpen, setAssignFormOpen] = useState(false);
+  const [isEventFormOpen, setEventFormOpen] = useState(false);
+
+  const handleOpenAssignForm = () => {
+    setAssignFormOpen(true);
+  };
+
+  const handleCloseAssignForm = () => {
+    setAssignFormOpen(false);
+  };
+
+  const handleOpenEventForm = () => {
+    setEventFormOpen(true);
+  };
+
+  const handleCloseEventForm = () => {
+    setEventFormOpen(false);
+  };
+  const handleOpenParticipantOnEvents = () => {
     const combinedParams = `${event.id},${competitionID},${event.division},${event.age_categorie},${event.type}`;
     navigate(`/participant-on-event/${combinedParams}`);
   };
 
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader onClick={handleOpenParticipantOnEvents}>
         <SunIcon boxSize={8} color="blue.300" />
       </CardHeader>
-      <CardBody>
+      <CardBody onClick={handleOpenParticipantOnEvents}>
         <Badge colorScheme="purple">{event.type}</Badge>
         <br />
         <Text as="b">{event.name}</Text>
@@ -337,17 +518,24 @@ const EventCardItem = ({ event,competitionID, onDelete, onUpdate }) => {
       <CardFooter alignItems="center" justifyContent="center">
         <ButtonGroup>
           <EventForm
-            isOpen={isOpen}
-            onOpen={handleOpen}
-            onClose={handleClose}
+            isOpen={isEventFormOpen}
+            onOpen={handleOpenEventForm}
+            onClose={handleCloseEventForm}
             initialName={event.name}
             initialStartTime={event.startTime}
             initialEndTime={event.endTime}
             EventID={event.id}
             onUpdate={onUpdate}
           />
+          <AssignJudgeEventForm
+            isOpen={isAssignFormOpen}
+            onOpen={handleOpenAssignForm}
+            onClose={handleCloseAssignForm}
+            EventID={event.id}
+            onCreate={onCreate}
+          />
           <DeletePopover
-            button={<Button flex="1" variant="ghost" leftIcon={<DeleteIcon />} />}
+            button={<IconButton  colorScheme="red" flex="1" variant="solid" icon={<DeleteIcon />} />}
             EventID={event.id}
             onDelete={onDelete}
           />

@@ -36,8 +36,10 @@ model Event {
   endTime      String
 
   participants Participant[]
+  users        User[]
   groups       Groups[]
   scores       Score[]
+  types        Type[]
 }
 
 model Participant {
@@ -74,7 +76,7 @@ model Score {
 
 model User {
   id             Int             @id @unique @default(autoincrement())
-  name           String?
+  name           String?         @unique
   username       String?         @unique
   password       String?
   role           String?
@@ -82,14 +84,16 @@ model User {
   scores         Score[]
   configurations Configuration[]
   types          Type[]
+  events         Event[]
 
   // TODO: Add a field for the current competition. This will be
 }
 
 model Type {
   id             Int             @id @unique @default(autoincrement())
-  name           String?
+  name           String?         @unique
   users          User[]
+  events         Event[]
 }
 
 model Groups {

@@ -312,7 +312,7 @@ const JudgeCardItem = ({ judge, onDelete, onUpdate }) => {
         <Text as="b">{judge.name}</Text>
         <br />
         <Badge variant="solid" colorScheme="blue">
-          Type: {judge.type}
+          Acive
         </Badge>
       </CardBody>
       <CardFooter alignItems="center" justifyContent="center">
