@@ -1,7 +1,7 @@
-import { 
+import {
   Image,
-  Box, 
-  Center, 
+  Box,
+  Center,
   Heading,
   Popover,
   PopoverTrigger,
@@ -9,35 +9,41 @@ import {
   PopoverHeader,
   PopoverBody,
   PopoverArrow,
-  PopoverCloseButton } from "@chakra-ui/react";
+  PopoverCloseButton,
+} from "@chakra-ui/react";
 import { useEffect, useState, useRef } from "react";
 import qrcode from "qrcode";
 import { socket } from "../socket_io";
 
-
-export function QRCodeGenerator({ ssid, password, username, userPassword, button }) {
+export function QRCodeGenerator({
+  ssid,
+  password,
+  username,
+  userPassword,
+  button,
+}) {
   const [qrCodeDataURL, setQRCodeDataURL] = useState("");
   const [ipAddress, setIpAddress] = useState("");
   const [secretCode, setSecretCode] = useState("");
   const initialFocusRef = useRef();
 
   useEffect(() => {
-    socket.emit("ipAddress-r")
+    socket.emit("ipAddress-r");
     socket.on("ipAddress", (ipAddress) => {
       setIpAddress(ipAddress);
-      console.log(`ip: ${ipAddress}`)
+      console.log(`ip: ${ipAddress}`);
     });
   }, []);
 
   useEffect(() => {
-    socket.emit("secretCode-r")
+    socket.emit("secretCode-r");
     socket.on("secretCode", (secretCode) => {
       setSecretCode(secretCode);
     });
   }, []);
 
   useEffect(() => {
-    const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};U:${username};S:${userPassword};;T:IP;P:${ipAddress};;T:SECRET;P:${secretCode};;`;
+    const wifiQRCodeData = `WIFI:S:${ssid};T:WPA;P:${password};U:${username};Q:${userPassword};;T:IP;P:${ipAddress};;T:SECRET;P:${secretCode};;`;
     qrcode.toDataURL(wifiQRCodeData).then((dataURL) => {
       setQRCodeDataURL(dataURL);
     });
