@@ -113,7 +113,6 @@ io.on("connection", async (socket) => {
   //Specials
   socket.emit("ipAddress", ipAddress);
   socket.emit("secretCode", secretCode);
-
   socket.on("assign-random-numbers", async () => {
     try {
       // Fetch all participants and groups from the database
@@ -198,6 +197,131 @@ io.on("connection", async (socket) => {
       console.error("Assign event failed:", error);
     }
   });
+  socket.on("add-score", async ({ judgeUsername, eventId, participantId, scoreData }) => {
+    try {
+      // Find the judge by their username
+      const judge = await prisma.user.findUnique({
+        where: { username: judgeUsername },
+      });
+
+      // Find the event by its ID
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+
+      // Find the participant by their ID
+      const participant = await prisma.participant.findUnique({
+        where: { id: participantId },
+      });
+
+      // Check if the judge has a relation with the event
+      const judgeEventRelation = await prisma.user.findFirst({
+        where: {
+          id: judge.id,
+          competitions: { some: { events: { some: { id: event.id } } } },
+        },
+      });
+
+      if (!judgeEventRelation) {
+        throw new Error('Judge does not have a relation with the event.');
+      }
+
+      // Fetch the type.name that has a relation with the event model
+      const eventType = await prisma.type.findFirst({
+        where: { events: { some: { id: event.id } } },
+      });
+
+      if (!eventType) {
+        throw new Error('No type found for the event.');
+      }
+
+      // Create the score
+      const newScore = await prisma.score.create({
+        data: {
+          eventlink: { connect: { id: event.id } },
+          type: eventType.name,
+          value: scoreData,
+          users: { connect: { id: judge.id } },
+          participants: { connect: { id: participant.id } },
+        },
+      });
+
+      // Perform any other necessary operations or emit events
+
+      // Return the new score or relevant information to the client
+      console.log("Score Added", newScore);
+      socket.emit('score-added', { score: newScore });
+    } catch (error) {
+      // Handle any errors that occurred during the process
+      socket.emit('score-error', { error: error.message });
+    }
+  });
+
+  socket.on("add-score-group", async ({ judgeUsername, eventId, groupId, scoreData }) => {
+    try {
+      // Find the judge by their username
+      const judge = await prisma.user.findUnique({
+        where: { username: judgeUsername },
+      });
+  
+      // Find the event by its ID
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+  
+      // Find the group by its ID
+      const group = await prisma.groups.findUnique({
+        where: { id: groupId },
+        include: { participants: true }, // Include the participants related to the group
+      });
+  
+      // Check if the judge has a relation with the event
+      const judgeEventRelation = await prisma.user.findFirst({
+        where: {
+          id: judge.id,
+          competitions: { some: { events: { some: { id: event.id } } } },
+        },
+      });
+  
+      if (!judgeEventRelation) {
+        throw new Error('Judge does not have a relation with the event.');
+      }
+  
+      // Fetch the eventType that has a relation with the event model
+      const eventType = await prisma.type.findFirst({
+        where: { events: { some: { id: event.id } } },
+      });
+  
+      if (!eventType) {
+        throw new Error('No type found for the event.');
+      }
+  
+      // Loop through the participants of the group and add scores for each participant
+      for (const participant of group.participants) {
+        const newScore = await prisma.score.create({
+          data: {
+            eventlink: { connect: { id: event.id } },
+            type: eventType.name,
+            value: scoreData,
+            users: { connect: { id: judge.id } },
+            groups: { connect: { id: group.id } },
+            participants: { connect: { id: participant.id } },
+          },
+        });
+  
+        // Perform any other necessary operations or emit events
+  
+        // Return the new score or relevant information to the client
+        console.log("Score Added", newScore);
+        socket.emit('score-added-group', { score: newScore });
+      }
+    } catch (error) {
+      // Handle any errors that occurred during the process
+      socket.emit('score-error-group', { error: error.message });
+    }
+  });
+  
+    
 
   //Special-Requests
   socket.on("ipAddress-r", () => {
@@ -263,17 +387,14 @@ io.on("connection", async (socket) => {
       console.error("Failed to fetch participants:", error);
     }
   });
-  
-
-  socket.on("fetch-judge-participants", async ({ judgeId, eventId , serverSecretCode }) => {
+  socket.on("fetch-judge-participants", async ({ judge, eventId, serverSecretCode }) => {
     try {
-
-
-      if ((serverSecretCode= !secretCode)) {
+      if (serverSecretCode !== secretCode) {
         throw "Try scanning the new QR-Code";
       }
-      const judge = await prisma.user.findUnique({
-        where: { username: judgeId },
+  
+      const judgeData = await prisma.user.findUnique({
+        where: { username: judge },
         include: {
           events: {
             where: { id: eventId },
@@ -282,8 +403,13 @@ io.on("connection", async (socket) => {
                 where: {
                   NOT: {
                     groups: {
-                      some: { eventId },
+                      some: {
+                        events: { some: { id: eventId } },
+                      },
                     },
+                  },
+                  scores: {
+                    none: { eventlinkId: eventId },
                   },
                 },
               },
@@ -292,17 +418,17 @@ io.on("connection", async (socket) => {
           },
         },
       });
-
-      if (!judge) {
+  
+      if (!judgeData) {
         throw new Error("Judge not found");
       }
-
-      const event = judge.events[0];
+  
+      const event = judgeData.events[0];
       const participants = event.participants;
       const eventType = event.types;
-
+  
       console.log("Fetched participants successfully");
-
+  
       // Emit the participants and eventType to the judge
       socket.emit("participantsAndTypeData", {
         participants,
@@ -312,6 +438,36 @@ io.on("connection", async (socket) => {
       console.error("Failed to fetch participants:", error);
     }
   });
+  
+  socket.on("fetch-judge-groups", async ({ eventId, serverSecretCode }) => {
+    try {
+      if (serverSecretCode !== secretCode) {
+        throw "Try scanning the new QR-Code";
+      }
+  
+      const groups = await prisma.groups.findMany({
+        where: {
+          events: {
+            some: { id: eventId },
+          },
+          NOT: {
+            scores: {
+              some: { eventlinkId: eventId },
+            },
+          },
+        },
+      });
+  
+      console.log("Fetched groups successfully");
+  
+      // Emit the groups to the judge
+      socket.emit("groupsAndTypeData", { groups });
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+    }
+  });
+  
+  
 
   //Authentication
   socket.on("authenticate", async ({ username, password }) => {
@@ -739,7 +895,7 @@ io.on("connection", async (socket) => {
       console.error("Error fetching judges:", error);
     }
   });
-  socket.on("fetchParticipant", async (id , serverSecretCode) => {
+  socket.on("fetchParticipant", async ({id , serverSecretCode}) => {
     try {
 
 
@@ -795,6 +951,7 @@ io.on("connection", async (socket) => {
         throw "Try scanning the new QR-Code";
       }
 
+
       // Find the judge by ID
       const judgeInfo = await prisma.user.findUnique({
         where: { username: judge },
@@ -809,7 +966,7 @@ io.on("connection", async (socket) => {
 
       const events = judgeInfo.events;
 
-      console.log("Fetched events successfully");
+      console.log("Fetched events successfully",events);
 
       // Emit the events to the judge
       socket.emit("judgeEvents", {

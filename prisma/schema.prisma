@@ -34,7 +34,6 @@ model Event {
   type         String
   startTime    String
   endTime      String
-
   participants Participant[]
   users        User[]
   groups       Groups[]
@@ -58,6 +57,7 @@ model Participant {
   competitions    Competition[]
   events          Event[]
   groups          Groups[]
+  scores          Score[]
 
   @@unique([id])
 }
@@ -66,12 +66,11 @@ model Score {
   id                 Int    @id @default(autoincrement())
   eventlink          Event  @relation(fields: [eventlinkId], references: [id])
   eventlinkId        Int
-  execution          Float?
-  difficulty         Float?
-  artisticExpression Float?
-  artisticImpression Float?
-  total              Float?
+  type               String
+  value              Float
   users              User[]
+  participants       Participant[]
+  groups             Groups[]
 }
 
 model User {
@@ -102,6 +101,7 @@ model Groups {
   generatedNumber Int?
   events          Event[]
   participants    Participant[]
+  scores          Score[]
 }
 
 model Configuration {
