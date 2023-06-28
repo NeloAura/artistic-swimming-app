@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 // import { SunIcon } from "@chakra-ui/icons";
 import NavigationComp from "./Navigation";
+import handleDownloadExcel from "./DownloadExcel";
 import { socket } from "../socket_io";
 
 
@@ -104,6 +105,7 @@ const fetchParticipants = () => {
             <Tr>
               <Th>Participant</Th>
               <Th isNumeric>Generated Number</Th>
+              <button onClick={handleDownloadExcel} participants={participants} groups={groups} > Download </button>
             </Tr>
           </Thead>
           <Tbody>

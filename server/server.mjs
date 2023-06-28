@@ -265,11 +265,16 @@ io.on("connection", async (socket) => {
   });
   
 
-  socket.on("fetch-judge-participants", async ({ judgeId, eventId }) => {
+  socket.on("fetch-judge-participants", async ({ judgeId, eventId , serverSecretCode }) => {
     try {
       // Find the judge by ID
+      const secret = serverSecretCode;
+
+      if ((secret = !secretCode)) {
+        throw "Try scanning the new QR-Code";
+      }
       const judge = await prisma.user.findUnique({
-        where: { id: judgeId },
+        where: { username: judgeId },
         include: {
           events: {
             where: { id: eventId },
@@ -663,6 +668,32 @@ io.on("connection", async (socket) => {
       console.error("Error fetching groups:", error);
     }
   });
+  socket.on("fetchGroup", async ({id ,serverSecretCode}) => {
+    try {
+
+      const secret = serverSecretCode;
+
+      if ((secret = !secretCode)) {
+        throw "Try scanning the new QR-Code";
+      }
+
+      const group = await prisma.groups.findUnique({
+        where: {
+          id: id,
+        },
+      });
+  
+      if (!group) {
+        // Group not found
+        socket.emit("groupNotFound");
+        return;
+      }
+  
+      socket.emit("groupData", group);
+    } catch (error) {
+      console.error("Error fetching group:", error);
+    }
+  });  
   socket.on("fetch-groups", async ({ id }) => {
     try {
       // Retrieve the groups associated with the event
@@ -711,6 +742,45 @@ io.on("connection", async (socket) => {
       console.error("Error fetching judges:", error);
     }
   });
+  socket.on("fetchParticipant", async (id , serverSecretCode) => {
+    try {
+      
+      const secret = serverSecretCode;
+
+      if ((secret = !secretCode)) {
+        throw "Try scanning the new QR-Code";
+      }
+
+      const participant = await prisma.participant.findUnique({
+        where: {
+          id: id,
+        },
+      });
+  
+      if (!participant) {
+        // Participant not found
+        socket.emit("participantNotFound");
+        return;
+      }
+  
+      const club = await prisma.club.findUnique({
+        where: {
+          id: participant.clublinkId,
+        },
+      });
+  
+      const modifiedParticipant = {
+        ...participant,
+        birthYear: new Date(participant.birthYear).toISOString().split("T")[0],
+        clublinkId: club ? club.name : null,
+      };
+  
+      socket.emit("participantData", modifiedParticipant);
+    } catch (error) {
+      console.error("Error fetching participant:", error);
+    }
+  });
+  
   socket.on("fetchEvents", async (id) => {
     try {
       const events = await prisma.event.findMany({
@@ -722,21 +792,28 @@ io.on("connection", async (socket) => {
       console.error("Error fetching events:", error);
     }
   });
-  socket.on("fetch-judge-events", async ({ judgeId }) => {
+  socket.on("fetch-judge-events", async ({ judge , serverSecretCode }) => {
     try {
+
+      const secret = serverSecretCode;
+
+      if ((secret = !secretCode)) {
+        throw "Try scanning the new QR-Code";
+      }
+
       // Find the judge by ID
-      const judge = await prisma.user.findUnique({
-        where: { id: judgeId },
+      const judgeInfo = await prisma.user.findUnique({
+        where: { username: judge },
         include: {
           events: true,
         },
       });
 
-      if (!judge) {
+      if (!judgeInfo) {
         throw new Error("Judge not found");
       }
 
-      const events = judge.events;
+      const events = judgeInfo.events;
 
       console.log("Fetched events successfully");
 
