@@ -267,10 +267,9 @@ io.on("connection", async (socket) => {
 
   socket.on("fetch-judge-participants", async ({ judgeId, eventId , serverSecretCode }) => {
     try {
-      // Find the judge by ID
-      const secret = serverSecretCode;
 
-      if ((secret = !secretCode)) {
+
+      if ((serverSecretCode= !secretCode)) {
         throw "Try scanning the new QR-Code";
       }
       const judge = await prisma.user.findUnique({
@@ -671,9 +670,7 @@ io.on("connection", async (socket) => {
   socket.on("fetchGroup", async ({id ,serverSecretCode}) => {
     try {
 
-      const secret = serverSecretCode;
-
-      if ((secret = !secretCode)) {
+      if ((serverSecretCode = !secretCode)) {
         throw "Try scanning the new QR-Code";
       }
 
@@ -744,10 +741,9 @@ io.on("connection", async (socket) => {
   });
   socket.on("fetchParticipant", async (id , serverSecretCode) => {
     try {
-      
-      const secret = serverSecretCode;
 
-      if ((secret = !secretCode)) {
+
+      if ((serverSecretCode = !secretCode)) {
         throw "Try scanning the new QR-Code";
       }
 
@@ -795,9 +791,7 @@ io.on("connection", async (socket) => {
   socket.on("fetch-judge-events", async ({ judge , serverSecretCode }) => {
     try {
 
-      const secret = serverSecretCode;
-
-      if ((secret = !secretCode)) {
+      if ((serverSecretCode = !secretCode)) {
         throw "Try scanning the new QR-Code";
       }
 
