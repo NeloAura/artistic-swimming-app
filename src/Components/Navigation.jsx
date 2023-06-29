@@ -37,7 +37,7 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
-  Spinner
+  Spinner,
 } from "@chakra-ui/react";
 import {
   InfoOutlineIcon,
@@ -345,7 +345,6 @@ const Navigation = () => {
         role,
       });
       console.log("Registration successful:", result);
-      navigateToDashboard();
       setTimeout(() => {
         setIsLoading(false);
         navigateToJudge();
@@ -364,6 +363,11 @@ const Navigation = () => {
         email,
       });
       console.log(" Club Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToClub();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -376,6 +380,11 @@ const Navigation = () => {
         name,
       });
       console.log(" Competition Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToDashboard();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -406,6 +415,11 @@ const Navigation = () => {
         event,
       });
       console.log("Participant Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToParticipant();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -638,7 +652,7 @@ const Navigation = () => {
           competition,
           eventString // Pass the event string to the onUpdate function
         );
-        setIsLoading(true);  
+        setIsLoading(true);
         onClose();
 
         return result;
@@ -906,7 +920,7 @@ const Navigation = () => {
         const result = await registerclub(name, cellPhone, email).then(
           onClose()
         );
-        setIsLoading(true); 
+        setIsLoading(true);
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -1150,7 +1164,6 @@ const Navigation = () => {
               borderRadius={45}
               mb={3}
               alignItems="center"
-              
             />
           )}
 
@@ -1262,16 +1275,14 @@ const Navigation = () => {
             />
           )}
           {isLoading && (
-            
-              <Spinner
-                thickness="4px"
-                speed="0.65s"
-                emptyColor="gray.200"
-                color="purple.500"
-                size="xl"
-                mt="3"
-              />
-            
+            <Spinner
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="purple.500"
+              size="xl"
+              mt="3"
+            />
           )}
           <Menu>
             <MenuButton
