@@ -330,6 +330,18 @@ const Navigation = () => {
     navigate("/generated");
   };
 
+  const navigateToClubBoard = () => {
+    navigate("/clubboard");
+  };
+
+  const navigateToParticipantBoard = () => {
+    navigate("/participantboard");
+  };
+
+  const navigateToGroupBoard = () => {
+    navigate("/groupboard");
+  };
+
   const generateNumbers = () => {
     socket.emit("assign-random-numbers");
   };
@@ -1302,10 +1314,27 @@ const Navigation = () => {
               >
                 GenerateNumbers
               </MenuItem>
-              <MenuItem>Create a Copy</MenuItem>
-              <MenuItem>Mark as Draft</MenuItem>
-              <MenuItem>Delete</MenuItem>
-              <MenuItem>Attend a Workshop</MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToClubBoard();
+                }}
+              >
+                ClubBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToParticipantBoard();
+                }}
+              >
+                ParticipantBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToGroupBoard();
+                }}
+              >
+                GroupBoard
+              </MenuItem>
             </MenuList>
           </Menu>
         </List>
