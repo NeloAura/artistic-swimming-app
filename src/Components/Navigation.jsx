@@ -357,7 +357,6 @@ const Navigation = () => {
         role,
       });
       console.log("Registration successful:", result);
-      navigateToDashboard();
       setTimeout(() => {
         setIsLoading(false);
         navigateToJudge();
@@ -376,6 +375,11 @@ const Navigation = () => {
         email,
       });
       console.log(" Club Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToClub();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -388,6 +392,11 @@ const Navigation = () => {
         name,
       });
       console.log(" Competition Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToDashboard();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -418,6 +427,11 @@ const Navigation = () => {
         event,
       });
       console.log("Participant Registration successful:", result);
+      navigateToDashboard();
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToParticipant();
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
