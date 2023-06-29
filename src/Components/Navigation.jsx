@@ -77,8 +77,8 @@ const countries = [
   "Bhutan",
   "Bolivia",
   "Bonaire",
-  "Sint Eustatius"
-  ,"Saba",
+  "Sint Eustatius",
+  "Saba",
   "Bosnia and Herzegovina",
   "Botswana",
   "Bouvet Island",
@@ -306,9 +306,9 @@ const countries = [
 
 //functions
 
-
 const Navigation = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
   const navigateToDashboard = () => {
     navigate("/dashboard");
   };
@@ -332,9 +332,9 @@ const Navigation = () => {
   const generateNumbers = () => {
     socket.emit("assign-random-numbers");
   };
-  
+
   // Register a new user with their username and password
-  
+
   async function register(name, username, password, role) {
     try {
       const result = await emit("register-user", {
@@ -344,7 +344,11 @@ const Navigation = () => {
         role,
       });
       console.log("Registration successful:", result);
-      setTimeout(()=>{navigateToJudge()},2000)
+     
+      setTimeout(() => {
+        setIsLoading(false);
+        navigateToJudge();
+      }, 2000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -407,7 +411,7 @@ const Navigation = () => {
       throw new Error("Registration failed");
     }
   }
-  
+
   function WalkthroughPopover(button) {
     const initialFocusRef = React.useRef();
     return (
@@ -453,26 +457,27 @@ const Navigation = () => {
   function UserDrawer() {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const firstField = React.useRef();
-  
+
     const handleSubmit = async (event) => {
       event.preventDefault();
       const name = document.getElementById("name").value;
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
       const role = document.getElementById("role").value;
-  
+
       try {
+        setIsLoading(true);
         const result = await register(name, username, password, role).then(
           onClose()
         );
-  
+
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
         console.error("Failed to register user:", error);
       }
     };
-  
+
     return (
       <>
         <Button colorScheme="purple" onClick={onOpen}>
@@ -509,7 +514,7 @@ const Navigation = () => {
                       placeholder="Please enter password"
                     />
                   </Box>
-  
+
                   <Box>
                     <FormLabel htmlFor="role">Select Role</FormLabel>
                     <Select id="role" defaultValue="Stakamahachi">
@@ -523,7 +528,7 @@ const Navigation = () => {
                 </Button>
               </form>
             </DrawerBody>
-  
+
             <DrawerFooter borderTopWidth="1px">
               <Button variant="outline" mr={3} onClick={onClose}>
                 Cancel
@@ -553,7 +558,7 @@ const Navigation = () => {
         });
       });
     };
-  
+
     const fetchCompetitions = async () => {
       return new Promise((resolve, reject) => {
         socket.emit("fetchCompetitions");
@@ -566,7 +571,7 @@ const Navigation = () => {
         });
       });
     };
-  
+
     React.useEffect(() => {
       const fetchClubsData = async () => {
         try {
@@ -576,10 +581,10 @@ const Navigation = () => {
           console.error("Error setting clubs:", error);
         }
       };
-  
+
       fetchClubsData();
     }, []);
-  
+
     React.useEffect(() => {
       const fetchCompetitionsData = async () => {
         try {
@@ -589,10 +594,10 @@ const Navigation = () => {
           console.error("Error setting competitions:", error);
         }
       };
-  
+
       fetchCompetitionsData();
     }, []);
-  
+
     const [formValues, setFormValues] = React.useState({
       lastname: "",
       firstname: "",
@@ -604,7 +609,7 @@ const Navigation = () => {
       competition: "",
       event: "",
     });
-  
+
     const handleSubmit = async () => {
       try {
         const {
@@ -618,9 +623,9 @@ const Navigation = () => {
           competition,
           event,
         } = formValues;
-  
+
         const eventString = event.join(","); // Convert event array to string separated by commas
-  
+
         const result = await registerParticipant(
           lastname,
           firstname,
@@ -632,21 +637,21 @@ const Navigation = () => {
           competition,
           eventString // Pass the event string to the onUpdate function
         );
-  
+
         onClose();
-          
+
         return result;
       } catch (error) {
         console.error("Failed to update user:", error);
       }
     };
-  
+
     const handleChange = (field, value) => {
       setFormValues((prevFormValues) => {
         if (field === "event") {
           // Checkbox field
           const prevFieldValues = prevFormValues[field] || []; // Initialize with an empty array if the field doesn't exist
-  
+
           if (prevFieldValues.includes(value)) {
             // Checkbox is unisChecked, remove value from the array
             const updatedValues = prevFieldValues.filter(
@@ -676,7 +681,7 @@ const Navigation = () => {
         }
       });
     };
-  
+
     return (
       <>
         <Button colorScheme="green" onClick={onOpen}>
@@ -710,7 +715,9 @@ const Navigation = () => {
                     <Input
                       id={`firstname`}
                       value={formValues.firstname}
-                      onChange={(e) => handleChange("firstname", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("firstname", e.target.value)
+                      }
                       placeholder="Please enter firstname"
                     />
                     <br />
@@ -720,10 +727,12 @@ const Navigation = () => {
                       type="date"
                       id={`BirthDate`}
                       value={formValues.birthYear}
-                      onChange={(e) => handleChange("birthYear", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("birthYear", e.target.value)
+                      }
                       placeholder="BirthDate"
                     />
-  
+
                     <FormLabel htmlFor={`country`}>Country</FormLabel>
                     <Select
                       id={`country`}
@@ -744,7 +753,9 @@ const Navigation = () => {
                       id={`club`}
                       placeholder="Please Choose Club "
                       value={formValues.clublinkId}
-                      onChange={(e) => handleChange("clublinkId", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("clublinkId", e.target.value)
+                      }
                     >
                       {clubs.map((club) => (
                         <option key={club.id} value={club.name}>
@@ -807,14 +818,16 @@ const Navigation = () => {
                       ))}
                     </Select>
                     <br />
-  
+
                     <FormLabel htmlFor={`event`}>Select Events</FormLabel>
                     <CheckboxGroup colorScheme="green" defaultValue={[]}>
                       <Stack spacing={[1, 5]} direction={["flex-row"]}>
                         <Checkbox
                           value="Solo"
                           id={`event1`}
-                          onChange={(e) => handleChange("event", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("event", e.target.value)
+                          }
                           isChecked={formValues.event.includes("Solo")}
                         >
                           Solo
@@ -823,7 +836,9 @@ const Navigation = () => {
                           colorScheme="red"
                           value="Male Solo"
                           id={`event5`}
-                          onChange={(e) => handleChange("event", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("event", e.target.value)
+                          }
                           isChecked={formValues.event.includes("Male Solo")}
                         >
                           Male Solo
@@ -831,7 +846,9 @@ const Navigation = () => {
                         <Checkbox
                           value="Duet"
                           id={`event2`}
-                          onChange={(e) => handleChange("event", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("event", e.target.value)
+                          }
                           isChecked={formValues.event.includes("Duet")}
                         >
                           Duet
@@ -839,7 +856,9 @@ const Navigation = () => {
                         <Checkbox
                           value="MixDuet"
                           id={`event3`}
-                          onChange={(e) => handleChange("event", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("event", e.target.value)
+                          }
                           isChecked={formValues.event.includes("MixDuet")}
                         >
                           Mix Duet
@@ -847,7 +866,9 @@ const Navigation = () => {
                         <Checkbox
                           value="Team"
                           id={`event4`}
-                          onChange={(e) => handleChange("event", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("event", e.target.value)
+                          }
                           isChecked={formValues.event.includes("Team")}
                         >
                           Team
@@ -879,10 +900,12 @@ const Navigation = () => {
       const name = document.getElementById("name").value;
       const cellPhone = document.getElementById("cellPhone").value;
       const email = document.getElementById("email").value;
-  
+
       try {
-        const result = await registerclub(name, cellPhone, email).then(onClose());
-  
+        const result = await registerclub(name, cellPhone, email).then(
+          onClose()
+        );
+
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -903,8 +926,10 @@ const Navigation = () => {
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth="1px">Create a new Club</DrawerHeader>
-  
+            <DrawerHeader borderBottomWidth="1px">
+              Create a new Club
+            </DrawerHeader>
+
             <DrawerBody>
               <form onSubmit={handleSubmit}>
                 <Stack spacing="24px">
@@ -937,7 +962,7 @@ const Navigation = () => {
                 </Button>
               </form>
             </DrawerBody>
-  
+
             <DrawerFooter borderTopWidth="1px">
               <Button variant="outline" mr={3} onClick={onClose}>
                 Cancel
@@ -954,10 +979,10 @@ const Navigation = () => {
     const handleSubmit = async (event) => {
       event.preventDefault();
       const name = document.getElementById("name").value;
-  
+
       try {
         const result = await registercompetition(name).then(onClose());
-  
+
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -981,7 +1006,7 @@ const Navigation = () => {
             <DrawerHeader borderBottomWidth="1px">
               Create a new Competition
             </DrawerHeader>
-  
+
             <DrawerBody>
               <form onSubmit={handleSubmit}>
                 <Stack spacing="24px">
@@ -999,7 +1024,7 @@ const Navigation = () => {
                 </Button>
               </form>
             </DrawerBody>
-  
+
             <DrawerFooter borderTopWidth="1px">
               <Button variant="outline" mr={3} onClick={onClose}>
                 Cancel
@@ -1013,7 +1038,7 @@ const Navigation = () => {
   function ImagePopover(button) {
     const initialFocusRef = React.useRef();
     const [judges, setJudges] = React.useState([]);
-  
+
     // Fetch judges
     const fetchJudges = async () => {
       return new Promise((resolve, reject) => {
@@ -1027,7 +1052,7 @@ const Navigation = () => {
         });
       });
     };
-  
+
     React.useEffect(() => {
       const fetchJudgesData = async () => {
         try {
@@ -1037,10 +1062,10 @@ const Navigation = () => {
           console.error("Error setting judges:", error);
         }
       };
-  
+
       fetchJudgesData();
     }, []);
-  
+
     return (
       <Popover
         placement="bottom-start"
@@ -1072,7 +1097,7 @@ const Navigation = () => {
         Judge: {judge.name}
       </Badge>
     );
-  
+
     return (
       <QRCodeGenerator
         ssid="BBS"
@@ -1234,7 +1259,26 @@ const Navigation = () => {
               alignItems="center"
             />
           )}
-
+          {isLoading && (
+            <Box
+              position="absolute"
+              top={0}
+              bottom={0}
+              left={0}
+              right={0}
+              bg="rgba(0, 0, 0, 0.5)"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Spinner
+                thickness="4px"
+                speed="0.65s"
+                emptyColor="gray.200"
+                color="blue.500"
+                size="xl"
+              />
+            </Box>
+          )}
           <Menu>
             <MenuButton
               as={Button}
