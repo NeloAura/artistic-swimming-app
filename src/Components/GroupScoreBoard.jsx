@@ -12,15 +12,30 @@ const GroupScoreBoard = () => {
   const [groupScores, setGroupScores] = useState([]);
 
   useEffect(() => {
-    socket.on('group-score-information', (data) => {
-      setGroupScores(data);
-      console.log(data);
-    });
+    fetchGroupScores();
 
     return () => {
-      socket.disconnect(); // Clean up the socket connection when component unmounts
+      socket.disconnect();
     };
-  }, []);
+  }, [groupScores]);
+
+  const fetchGroupScores = async () => {
+    try {
+      const scores = await new Promise((resolve, reject) => {
+        socket.emit('getClubScores');
+        socket.on('clubScoresData', (data) => {
+          resolve(data);
+        });
+        socket.on('connect_error', (error) => {
+          reject(error);
+          socket.disconnect();
+        });
+      });
+      setGroupScores(scores);
+    } catch (error) {
+      console.error('Error fetching group scores:', error);
+    }
+  };
 
   return (
     <Table variant='simple'>
@@ -55,3 +70,4 @@ const GroupScoreBoard = () => {
 };
 
 export default GroupScoreBoard;
+

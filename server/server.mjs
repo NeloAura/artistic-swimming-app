@@ -371,37 +371,50 @@ io.on("connection", async (socket) => {
       }
     });
   socket.on('participant-score-information', async () => {
-        try {
-          const participants = await prisma.participant.findMany({
-            include: {
-              scores: {
-                include: {
-                  eventlink: true,
-                  users: true,
+      try {
+        // Fetch participant scores and related information
+        const participantScores = await prisma.score.findMany({
+          include: {
+            participants: {
+              include: {
+                users: true,
+                events: {
+                  include: {
+                    division: true,
+                    age_categorie: true,
+                    types: true,
+                  },
                 },
               },
             },
-          });
+          },
+        });
     
-          // Prepare the participant score information with event and user details
-          const formattedParticipants = participants.map((participant) => ({
-            id: participant.id,
-            lastName: participant.lastName,
-            firstName: participant.firstName,
-            scores: participant.scores.map((score) => ({
-              id: score.id,
-              type: score.type,
-              value: score.value,
-              event: score.eventlink,
-              user: score.users[0],
-            })),
-          }));
+        // Calculate average score for each participant
+        const participantAverageScores = participantScores.map((score) => {
+          const totalScores = score.participants.scores.length;
+          const sumScores = score.participants.scores.reduce((sum, s) => sum + s.value, 0);
+          const averageScore = sumScores / totalScores;
     
-          socket.emit('participant-score-information', formattedParticipants);
-        } catch (error) {
-          console.error('Error fetching participant scores:', error);
-        }
-      });    
+          return {
+            id: score.participants.id,
+            firstName: score.participants.firstName,
+            lastName: score.participants.lastName,
+            division: score.participants.events.division,
+            age_categorie: score.participants.events.age_categorie,
+            type: score.participants.events.types,
+            score: score.value,
+            givenBy: score.participants.users.name,
+            averageScore: isNaN(averageScore) ? 0 : averageScore,
+          };
+        });
+    
+        // Emit the participant score information back to the client
+        socket.emit('participant-score-information', participantAverageScores);
+      } catch (error) {
+        console.error('Error fetching participant scores:', error);
+      }
+    });
   socket.on('getClubScores', async () => {
           try {
             const clubs = await prisma.club.findMany({
@@ -428,7 +441,7 @@ io.on("connection", async (socket) => {
             console.error(error);
           }
         });
-        
+
       
       
  

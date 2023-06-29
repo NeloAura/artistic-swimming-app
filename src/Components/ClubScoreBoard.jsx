@@ -1,49 +1,65 @@
-function createClubScoreTable(data) {
-    const tableContainer = document.createElement('div');
-    const table = document.createElement('table');
-    const tableCaption = document.createElement('caption');
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-  
-    tableCaption.textContent = 'Club Scores';
-    table.appendChild(tableCaption);
-  
-    const headerRow = document.createElement('tr');
-    const clubNameHeader = document.createElement('th');
-    const scoreHeader = document.createElement('th');
-  
-    clubNameHeader.textContent = 'Club Name';
-    scoreHeader.textContent = 'Score';
-  
-    headerRow.appendChild(clubNameHeader);
-    headerRow.appendChild(scoreHeader);
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-  
-    data.forEach((club) => {
-      const row = document.createElement('tr');
-      const clubNameCell = document.createElement('td');
-      const scoreCell = document.createElement('td');
-  
-      clubNameCell.textContent = club.name;
-      scoreCell.textContent = club.averageScore.toFixed(2);
-  
-      row.appendChild(clubNameCell);
-      row.appendChild(scoreCell);
-      tbody.appendChild(row);
-    });
-  
-    table.appendChild(tbody);
-    tableContainer.appendChild(table);
-  
-    return tableContainer;
-  }
-  
-  // Example usage with socket.on
-  socket.on('clubScoresData', (data) => {
-    const tableContainer = createClubScoreTable(data);
-    const container = document.getElementById('tableContainer');
-    container.innerHTML = ''; // Clear previous content
-    container.appendChild(tableContainer);
-  });
-  
+import { Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
+import { socket } from '../socket_io';
+import { useState, useEffect } from 'react';
+
+const ClubScoreBoard = () => {
+  const [clubScores, setClubScores] = useState([]);
+
+  useEffect(() => {
+    fetchClubScores();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  const fetchClubScores = async () => {
+    try {
+      const scores = await new Promise((resolve, reject) => {
+        socket.emit('fetch-club-scores');
+        socket.on('club-scores-data', (data) => {
+          resolve(data);
+        });
+        socket.on('connect_error', (error) => {
+          reject(error);
+          socket.disconnect();
+        });
+      });
+      setClubScores(scores);
+    } catch (error) {
+      console.error('Error fetching club scores:', error);
+    }
+  };
+
+  return (
+    <div id='clubScoreContainer'>
+      <Table variant='simple'>
+        <caption>Club Scores</caption>
+        <Thead>
+          <Tr>
+            <Th>Club Name</Th>
+            <Th>Score</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {clubScores.length > 0 ? (
+            clubScores.map((club) => (
+              <Tr key={club.name}>
+                <Td>{club.name}</Td>
+                <Td>{club.averageScore.toFixed(2)}</Td>
+              </Tr>
+            ))
+          ) : (
+            <Tr>
+              <Td colSpan={2} textAlign='center'>
+                No club scores available.
+              </Td>
+            </Tr>
+          )}
+        </Tbody>
+      </Table>
+    </div>
+  );
+};
+
+export default ClubScoreBoard;
