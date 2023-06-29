@@ -342,6 +342,10 @@ const Navigation = () => {
     navigate("/groupboard");
   };
 
+  const navigateToParticipantScoreTable = () => {
+    navigate("/editscore");
+  };
+
   const generateNumbers = () => {
     socket.emit("assign-random-numbers");
   };
@@ -1334,6 +1338,13 @@ const Navigation = () => {
                 }}
               >
                 GroupBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToParticipantScoreTable();
+                }}
+              >
+                Edit Score
               </MenuItem>
             </MenuList>
           </Menu>

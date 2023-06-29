@@ -397,6 +397,21 @@ io.on("connection", async (socket) => {
       socket.emit("error", "An error occurred while fetching club scores");
     }
   });
+  socket.on('update-score-value', async ({ scoreId, newValue }) => {
+    try {
+      const updatedScore = await prisma.score.update({
+        where: { id: scoreId },
+        data: { value: newValue },
+      });
+      console.log('Score value updated:', updatedScore);
+    } catch (error) {
+      console.error('Error updating score value:', error);
+    }
+  });
+
+
+
+
 
   //Special-Requests
   socket.on("ipAddress-r", () => {
@@ -1057,23 +1072,46 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("fetchData", async (id) => {
+  socket.on("fetchEvents", async (id) => {
     try {
-      const [events, groups, participants] = await Promise.all([
-        prisma.event.findMany({ where: { competitionId: id } }),
-        prisma.groups.findMany({
-          where: { eventId: { in: events.map((event) => event.id) } },
-        }),
-        prisma.participant.findMany({
-          where: { eventId: { in: events.map((event) => event.id) } },
-        }),
-      ]);
-
-      socket.emit("competitionData", { events, groups, participants });
+      const eventTypes = ["Solo", "Duet", "Mix Duet", "Team", "Male Solo"];
+  
+      const events = await prisma.event.findMany({
+        where: {
+          competitionId: id,
+          participants: {
+            some: {
+              OR: eventTypes.map((eventType) => ({
+                event: { contains: eventType },
+              })),
+            },
+          },
+        },
+        include: {
+          groups: true,
+          participants: true,
+        },
+      });
+  
+      socket.emit("eventsData", events);
     } catch (error) {
-      console.error("Error fetching competition data:", error);
+      console.error("Error fetching events:", error);
     }
   });
+
+  socket.on("fetchAllEvents", async () => {
+    try {
+      const events = await prisma.event.findMany();
+  
+      socket.emit("events", events);
+      console.log(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  });
+  
+  
+
 
   socket.on("fetch-judge-events", async ({ judge, serverSecretCode }) => {
     try {
