@@ -61,6 +61,15 @@ function generateRandomNumber(range) {
   return Math.floor(Math.random() * range) + 1;
 }
 
+function calculateAverageScore(scores) {
+  if (scores.length === 0) {
+    return 0;
+  }
+
+  const totalScore = scores.reduce((sum, score) => sum + score.value, 0);
+  return totalScore / scores.length;
+}
+
 async function createDefaultUser() {
   const adminUser = await prisma.user.findUnique({ where: { id: 1 } });
   if (!adminUser) {
@@ -361,10 +370,7 @@ io.on("connection", async (socket) => {
         console.error('Error fetching group scores:', error);
       }
     });
-    
-    //paricipant
-    io.on('connection', (socket) => {
-      socket.on('participant-score-information', async () => {
+  socket.on('participant-score-information', async () => {
         try {
           const participants = await prisma.participant.findMany({
             include: {
@@ -395,8 +401,38 @@ io.on("connection", async (socket) => {
         } catch (error) {
           console.error('Error fetching participant scores:', error);
         }
-      });
-    });
+      });    
+  socket.on('getClubScores', async () => {
+          try {
+            const clubs = await prisma.club.findMany({
+              include: {
+                participants: {
+                  include: {
+                    scores: true,
+                  },
+                },
+              },
+            });
+      
+            const clubScoresData = clubs.map((club) => ({
+              name: club.name,
+              participants: club.participants.map((participant) => ({
+                id: participant.id,
+                averageScore: calculateAverageScore(participant.scores),
+              })),
+            }));
+      
+            socket.emit('clubScoresData', clubScoresData);
+          } catch (error) {
+            // Handle error appropriately
+            console.error(error);
+          }
+        });
+        
+      
+      
+ 
+
 
   //Special-Requests
   socket.on("ipAddress-r", () => {
