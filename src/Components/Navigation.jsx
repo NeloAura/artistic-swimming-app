@@ -37,6 +37,7 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
+  Spinner
 } from "@chakra-ui/react";
 import {
   InfoOutlineIcon,
@@ -344,11 +345,11 @@ const Navigation = () => {
         role,
       });
       console.log("Registration successful:", result);
-     
+      navigateToDashboard();
       setTimeout(() => {
         setIsLoading(false);
         navigateToJudge();
-      }, 2000);
+      }, 5000);
       return result;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -637,7 +638,7 @@ const Navigation = () => {
           competition,
           eventString // Pass the event string to the onUpdate function
         );
-
+        setIsLoading(true);  
         onClose();
 
         return result;
@@ -905,7 +906,7 @@ const Navigation = () => {
         const result = await registerclub(name, cellPhone, email).then(
           onClose()
         );
-
+        setIsLoading(true); 
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -982,7 +983,7 @@ const Navigation = () => {
 
       try {
         const result = await registercompetition(name).then(onClose());
-
+        setIsLoading(true);
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -1149,6 +1150,7 @@ const Navigation = () => {
               borderRadius={45}
               mb={3}
               alignItems="center"
+              
             />
           )}
 
@@ -1260,24 +1262,16 @@ const Navigation = () => {
             />
           )}
           {isLoading && (
-            <Box
-              position="absolute"
-              top={0}
-              bottom={0}
-              left={0}
-              right={0}
-              bg="rgba(0, 0, 0, 0.5)"
-              justifyContent="center"
-              alignItems="center"
-            >
+            
               <Spinner
                 thickness="4px"
                 speed="0.65s"
                 emptyColor="gray.200"
-                color="blue.500"
+                color="purple.500"
                 size="xl"
+                mt="3"
               />
-            </Box>
+            
           )}
           <Menu>
             <MenuButton
