@@ -436,11 +436,6 @@ const CompetitionCard = () => {
       <nav>
         <NavigationComp />
       </nav>
-      <SimpleGrid
-        spacing={4}
-        templateColumns="repeat(auto-fill, minmax(200px, 1fr))"
-        display="flex"
-      >
         {competitions.map((competition) => (
           <CompetitionCardItem
             key={competition.id}
@@ -450,7 +445,6 @@ const CompetitionCard = () => {
             onCreate={handleCreateEvent}
           />
         ))}
-      </SimpleGrid>
     </ChakraProvider>
   );
 };
@@ -482,7 +476,7 @@ const CompetitionCardItem = ({ competition, onDelete, onUpdate, onCreate }) => {
   };
 
   return (
-    <Card ml="10px" minWidth="300px" >
+    <Card m="10px" minWidth="300px" bg="#F4F4F4" >
       <CardHeader onClick={handleOpenEvents}>
         <SunIcon boxSize={8} color="blue.300" />
       </CardHeader>
