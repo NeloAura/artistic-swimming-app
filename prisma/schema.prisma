@@ -58,6 +58,7 @@ model Participant {
   events          Event[]
   groups          Groups[]
   scores          Score[]
+  users           User[]
 
   @@unique([id])
 }
@@ -84,6 +85,7 @@ model User {
   configurations Configuration[]
   types          Type[]
   events         Event[]
+  participants   Participant[]
 
   // TODO: Add a field for the current competition. This will be
 }

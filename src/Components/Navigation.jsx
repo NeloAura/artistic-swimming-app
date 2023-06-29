@@ -37,7 +37,7 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
-  Spinner
+  Spinner,
 } from "@chakra-ui/react";
 import {
   InfoOutlineIcon,
@@ -328,6 +328,18 @@ const Navigation = () => {
 
   const navigateToGenerated = () => {
     navigate("/generated");
+  };
+
+  const navigateToClubBoard = () => {
+    navigate("/clubboard");
+  };
+
+  const navigateToParticipantBoard = () => {
+    navigate("/participantboard");
+  };
+
+  const navigateToGroupBoard = () => {
+    navigate("/groupboard");
   };
 
   const generateNumbers = () => {
@@ -638,7 +650,7 @@ const Navigation = () => {
           competition,
           eventString // Pass the event string to the onUpdate function
         );
-        setIsLoading(true);  
+        setIsLoading(true);
         onClose();
 
         return result;
@@ -906,7 +918,7 @@ const Navigation = () => {
         const result = await registerclub(name, cellPhone, email).then(
           onClose()
         );
-        setIsLoading(true); 
+        setIsLoading(true);
         console.log("Registration successful:", result);
         return result;
       } catch (error) {
@@ -1150,7 +1162,6 @@ const Navigation = () => {
               borderRadius={45}
               mb={3}
               alignItems="center"
-              
             />
           )}
 
@@ -1262,16 +1273,14 @@ const Navigation = () => {
             />
           )}
           {isLoading && (
-            
-              <Spinner
-                thickness="4px"
-                speed="0.65s"
-                emptyColor="gray.200"
-                color="purple.500"
-                size="xl"
-                mt="3"
-              />
-            
+            <Spinner
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="purple.500"
+              size="xl"
+              mt="3"
+            />
           )}
           <Menu>
             <MenuButton
@@ -1291,10 +1300,27 @@ const Navigation = () => {
               >
                 GenerateNumbers
               </MenuItem>
-              <MenuItem>Create a Copy</MenuItem>
-              <MenuItem>Mark as Draft</MenuItem>
-              <MenuItem>Delete</MenuItem>
-              <MenuItem>Attend a Workshop</MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToClubBoard();
+                }}
+              >
+                ClubBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToParticipantBoard();
+                }}
+              >
+                ParticipantBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToGroupBoard();
+                }}
+              >
+                GroupBoard
+              </MenuItem>
             </MenuList>
           </Menu>
         </List>
