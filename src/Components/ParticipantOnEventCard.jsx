@@ -262,7 +262,7 @@ function GroupForm({eventType ,selectedParticipants ,eventId}) {
   };
   return (
     <>
-      {eventType !== "Solo" && eventType !== "Male Solo" && (
+      {eventType !== "Solo" && eventType !== "MaleSolo" && (
       <Box bg="purple.400" width="100%" py={4} textAlign="center">
         <Button variant="solid" colorScheme="blue" onClick={onOpen}>
           Group Participants
@@ -331,7 +331,7 @@ const ParticipantCardItem = ({ participant, eventType, isChecked, onCheckboxChan
         </Badge>
       </CardBody>
       <CardFooter bg="blue.200" alignItems="center" justifyContent="center">
-        {eventType !== "Solo" && eventType !== "Male Solo" ? (
+        {eventType !== "Solo" && eventType !== "MaleSolo" ? (
           <Flex alignItems="center">
             <Checkbox colorScheme="red" isChecked={isChecked} onChange={handleCheckboxToggle} />
           </Flex>

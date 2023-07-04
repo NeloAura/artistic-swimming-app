@@ -51,7 +51,6 @@ function generateSecretCode(length = 8) {
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * characters.length);
     code += characters[randomIndex];
-    console.log(code);
   }
 
   return code;
@@ -86,6 +85,7 @@ async function createDefaultUser() {
       },
     });
   }
+  console.log("Default User Created");
 }
 
 async function createTypes() {
@@ -112,8 +112,36 @@ async function createTypes() {
     })
   );
 
-  console.log("Judge types created");
+  console.log("Judge Types Created");
 }
+
+const getJudgeTypes = async (judgeId, eventId) => {
+  try {
+    // Assuming you have a database or ORM to query data
+    const judge = await prisma.judge.findUnique({
+      where: {
+        id: judgeId,
+      },
+      include: {
+        events: {
+          where: {
+            id: eventId,
+          },
+          select: {
+            types: true,
+          },
+        },
+      },
+    });
+
+    // Extract the judge types from the retrieved data
+    const judgeTypes = judge.events[0].types;
+
+    return judgeTypes;
+  } catch (error) {
+    throw new Error("Failed to fetch judge types");
+  }
+};
 
 const secretCode = generateSecretCode();
 
@@ -125,6 +153,7 @@ io.on("connection", async (socket) => {
   //Specials
   socket.emit("ipAddress", ipAddress);
   socket.emit("secretCode", secretCode);
+  //random
   socket.on("assign-random-numbers", async () => {
     try {
       // Fetch all participants and groups from the database
@@ -209,26 +238,26 @@ io.on("connection", async (socket) => {
       console.error("Assign event failed:", error);
     }
   });
+  //score
   socket.on(
     "add-score",
-    async ({ username, eventId, participantId, scoreData }) => {
+    async ({ username, eventId, type, participantId, scoreData }) => {
       try {
         // Find the judge by their username
-        console.log("reached");
         const judge = await prisma.user.findUnique({
           where: { username: username },
         });
-
+  
         // Find the event by its ID
         const event = await prisma.event.findUnique({
           where: { id: eventId },
         });
-
+  
         // Find the participant by their ID
         const participant = await prisma.participant.findUnique({
           where: { id: participantId },
         });
-
+  
         // Check if the judge has a relation with the event
         const judgeEventRelation = await prisma.user.findFirst({
           where: {
@@ -236,33 +265,24 @@ io.on("connection", async (socket) => {
             competitions: { some: { events: { some: { id: event.id } } } },
           },
         });
-
+  
         if (!judgeEventRelation) {
           throw new Error("Judge does not have a relation with the event.");
         }
-
-        // Fetch the type.name that has a relation with the event model
-        const eventType = await prisma.type.findFirst({
-          where: { events: { some: { id: event.id } } },
-        });
-
-        if (!eventType) {
-          throw new Error("No type found for the event.");
-        }
-
-        // Create the score
+  
+        // Create the score and link it to the judge
         const newScore = await prisma.score.create({
           data: {
             eventlink: { connect: { id: event.id } },
-            type: eventType.name,
+            type: type,
             value: scoreData,
             users: { connect: { id: judge.id } },
             participants: { connect: { id: participant.id } },
           },
         });
-
+  
         // Perform any other necessary operations or emit events
-
+  
         // Return the new score or relevant information to the client
         console.log("Score Added", newScore);
         socket.emit("score-added", { score: newScore });
@@ -273,9 +293,10 @@ io.on("connection", async (socket) => {
       }
     }
   );
+  
   socket.on(
     "add-score-group",
-    async ({ judgeUsername, eventId, groupId, scoreData }) => {
+    async ({ judgeUsername, eventId, type, groupId, scoreData }) => {
       try {
         // Find the judge by their username
         console.log("reached");
@@ -307,20 +328,14 @@ io.on("connection", async (socket) => {
         }
 
         // Fetch the eventType that has a relation with the event model
-        const eventType = await prisma.type.findFirst({
-          where: { events: { some: { id: event.id } } },
-        });
-
-        if (!eventType) {
-          throw new Error("No type found for the event.");
-        }
+       
 
         // Loop through the participants of the group and add scores for each participant
         for (const participant of group.participants) {
           const newScore = await prisma.score.create({
             data: {
               eventlink: { connect: { id: event.id } },
-              type: eventType.name,
+              type: type,
               value: scoreData,
               users: { connect: { id: judge.id } },
               groups: { connect: { id: group.id } },
@@ -369,7 +384,7 @@ io.on("connection", async (socket) => {
 
       // Emit the participants' scores back to the client
       socket.emit("participant-score-information", participants);
-      console.log(JSON.stringify(participants));
+      // console.log(JSON.stringify(participants));
     } catch (error) {
       console.error("Error fetching participants' scores:", error);
       socket.emit(
@@ -397,22 +412,76 @@ io.on("connection", async (socket) => {
       socket.emit("error", "An error occurred while fetching club scores");
     }
   });
-  socket.on('update-score-value', async ({ scoreId, newValue }) => {
+  socket.on("update-score-value", async ( participants ) => {
     try {
-      const updatedScore = await prisma.score.update({
-        where: { id: scoreId },
-        data: { value: newValue },
-      });
-      console.log('Score value updated:', updatedScore);
+      if (typeof participants === 'string') {
+        const parsedParticipants = JSON.parse(participants);
+  
+        for (const participant of parsedParticipants) {
+          const { scores } = participant;
+  
+          for (const score of scores) {
+            const { id: scoreId, value: newValue } = score;
+  
+            try {
+              const updatedScore = await prisma.score.update({
+                where: { id: scoreId },
+                data: { value: newValue },
+              });
+              console.log("Score value updated:", updatedScore);
+            } catch (error) {
+              console.error("Error updating score value:", error);
+            }
+          }
+        }
+      } else {
+        console.error("Invalid participants data:", participants);
+      }
     } catch (error) {
-      console.error('Error updating score value:', error);
+      console.error("Error updating score values:", error);
     }
   });
+  socket.on("get-judges-participants-scores", async () => {
+    const participants = await prisma.participant.findMany({
+      include: {
+        scores: {
+          include: { users: true },
+        },
+      },
+    });
+  
+    // Create an array to store the judgesScores for all participants
+    const allJudgesScores = [];
+  
+    // Iterate over each participant
+    participants.forEach((participant) => {
+      // Extract the scores, types, and corresponding judges from the participant object
+      const judgesScores = participant.scores.map((score) => ({
+        judge: score.users,
+        score: score.value,
+        type: score.type,
+      }));
+  
+      // Add the judgesScores for the current participant to the allJudgesScores array
+      allJudgesScores.push({
+        participantId: participant.id,
+        judgesScores,
+      });
+    });
+  
+    // Emit the allJudgesScores to the client
+    socket.emit("judges-participants-scores", allJudgesScores);
+    
+  });
+  
+  
 
-
-
-
-
+  
+  
+  
+  
+  
+  
   //Special-Requests
   socket.on("ipAddress-r", () => {
     socket.emit("ipAddress", ipAddress);
@@ -476,7 +545,7 @@ io.on("connection", async (socket) => {
 
         console.log("Participants added to event successfully");
         socket.emit("eventParticipantsData", participants);
-        console.log("Fetched participants:", participants);
+        
       } catch (error) {
         console.error("Failed to fetch participants:", error);
       }
@@ -666,18 +735,28 @@ io.on("connection", async (socket) => {
       const passwordHash = CryptoJS.AES.encrypt(password, key).toString();
 
       // Create the new user
+      const existingCompetitions = await prisma.competition.findMany(); // Fetch all existing competitions
+
+      const competitionIds = existingCompetitions.map(
+        (competition) => competition.id
+      ); // Extract the IDs
+
       const newUser = await prisma.user.create({
         data: {
           name,
           username,
           password: passwordHash,
           role: role || "judge", // set the role to "judge" if it's not provided
+          competitions: {
+            connect: competitionIds.map(id => ({ id })), // Connect the user to all existing competitions
+          },
         },
       });
     } catch (error) {
       console.error(error);
     }
   });
+
   socket.on(
     "register-participant",
     async ({
@@ -734,11 +813,37 @@ io.on("connection", async (socket) => {
             event,
           },
         });
+
+        // Find the corresponding event based on the provided criteria
+        const matchingEvent = await prisma.event.findFirst({
+          where: {
+            division,
+            age_categorie: age_category,
+            type: event,
+          },
+        });
+
+        if (matchingEvent) {
+          // Link the participant to the event
+          await prisma.event.update({
+            where: {
+              id: matchingEvent.id,
+            },
+            data: {
+              participants: {
+                connect: {
+                  id: newParticipant.id,
+                },
+              },
+            },
+          });
+        }
       } catch (error) {
         console.error(error);
       }
     }
   );
+
   socket.on("register-club", async ({ name, cellPhone, email }) => {
     try {
       // Check if the username already exists
@@ -804,18 +909,28 @@ io.on("connection", async (socket) => {
       });
 
       // Define the divisions, age categories, and types
-      const divisions = ["AWD", "Novice-A", "Novice-B", "Age Group"];
+      const divisions = ["AWD", "Novice-A", "Novice-B", "AgeGroup"];
       const ageCategories = {
-        AWD: ["noagelimit"],
+        "AWD": ["noagelimit"],
         "Novice-A": ["6&Under", "7&8", "9&10", "11&12", "13&O"],
         "Novice-B": ["6&Under", "7&8", "9&10", "11&12", "13&O"],
-        "Age Group": ["10&Under", "12&Under", "Youth", "Junior", "Senior"],
+        "AgeGroup": [
+          "10&Under",
+          "12&Under",
+          "Youth",
+          "Junior",
+          "Senior",
+          "Masters25-29",
+          "Masters30-39,",
+          "Masters40-49",
+          "Masters50-59",
+        ],
       };
       const types = {
-        AWD: ["Solo", "Duet", "Mix duet", "Team"],
-        "Novice-A": ["Solo", "Duet", "Mix duet", "Team"],
-        "Novice-B": ["Solo", "Duet", "Mix duet", "Team"],
-        "Age Group": ["Solo", "Male Solo", "Mix duet", "Duet", "Team"],
+        "AWD": ["Solo", "Duet", "MixDuet", "Team"],
+        "Novice-A": ["Solo", "Duet", "MixDuet", "Team"],
+        "Novice-B": ["Solo", "Duet", "MixDuet", "Team"],
+        "AgeGroup": ["Solo", "MaleSolo", "MixDuet", "Duet", "Team"],
       };
 
       // Create template events for each combination of division, age category, and type
@@ -994,7 +1109,7 @@ io.on("connection", async (socket) => {
       const groups = await prisma.event.findUnique({ where: { id } }).groups();
 
       socket.emit("eventGroupsData", groups);
-      console.log("Fetched groups:", groups);
+      
     } catch (error) {
       console.error("Error fetching groups:", error);
     }
@@ -1036,6 +1151,7 @@ io.on("connection", async (socket) => {
       console.error("Error fetching judges:", error);
     }
   });
+
   socket.on("fetchParticipant", async ({ id, serverSecretCode }) => {
     try {
       if ((serverSecretCode = !secretCode)) {
@@ -1072,50 +1188,57 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("fetchEvents", async (id) => {
+  socket.on("fetchEvents", async ({ competitionId }) => {
     try {
-      const eventTypes = ["Solo", "Duet", "Mix Duet", "Team", "Male Solo"];
+      const participants = await prisma.participant.findMany();
   
-      const events = await prisma.event.findMany({
-        where: {
-          competitionId: id,
-          participants: {
-            some: {
-              OR: eventTypes.map((eventType) => ({
-                event: { contains: eventType },
-              })),
+      const events = [];
+      const fetchedEventIds = new Set(); // Track fetched event IDs
+  
+      for (const participant of participants) {
+        const eventTypes = participant.event.split(",");
+  
+        for (const eventType of eventTypes) {
+          const participantEvents = await prisma.event.findMany({
+            where: {
+              competitionId: competitionId,
+              division: participant.division,
+              age_categorie: participant.age_category,
+              type: eventType.trim(),
             },
-          },
-        },
-        include: {
-          groups: true,
-          participants: true,
-        },
-      });
+          });
+  
+          // Filter out duplicate events based on event ID
+          const uniqueParticipantEvents = participantEvents.filter(
+            (event) => !fetchedEventIds.has(event.id)
+          );
+  
+          events.push(...uniqueParticipantEvents);
+          uniqueParticipantEvents.forEach((event) => fetchedEventIds.add(event.id));
+        }
+      }
   
       socket.emit("eventsData", events);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
   });
-
+  
+  
+  
   socket.on("fetchAllEvents", async () => {
     try {
       const events = await prisma.event.findMany();
-  
+
       socket.emit("events", events);
-      console.log(events);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
   });
-  
-  
-
 
   socket.on("fetch-judge-events", async ({ judge, serverSecretCode }) => {
     try {
-      if ((serverSecretCode = !secretCode)) {
+      if (serverSecretCode !== secretCode) {
         throw "Try scanning the new QR-Code";
       }
 
@@ -1123,7 +1246,20 @@ io.on("connection", async (socket) => {
       const judgeInfo = await prisma.user.findUnique({
         where: { username: judge },
         include: {
-          events: true,
+          events: {
+            include: {
+              participants: {
+                include: {
+                  scores: true,
+                },
+              },
+              groups: {
+                include: {
+                  scores: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -1131,7 +1267,20 @@ io.on("connection", async (socket) => {
         throw new Error("Judge not found");
       }
 
-      const events = judgeInfo.events;
+      const events = judgeInfo.events.map((event) => {
+        const participantsWithScores = event.participants.filter(
+          (participant) => participant.scores.length > 0
+        );
+        const groupsWithScores = event.groups.filter(
+          (group) => group.scores.length > 0
+        );
+
+        return {
+          ...event,
+          participants: participantsWithScores,
+          groups: groupsWithScores,
+        };
+      });
 
       console.log("Fetched events successfully", events);
 
@@ -1141,6 +1290,19 @@ io.on("connection", async (socket) => {
       });
     } catch (error) {
       console.error("Failed to fetch events:", error);
+    }
+  });
+  socket.on("fetchJudgeTypes", async ({ judgeId, eventId }) => {
+    try {
+      // Fetch the judge's types for the event from your data source
+      const judgeTypes = await getJudgeTypes(judgeId, eventId);
+
+      // Emit the judge types to the client
+      socket.emit("judgeTypesData", judgeTypes);
+    } catch (error) {
+      console.error("Error fetching judge types:", error);
+      // Emit an error event to the client if an error occurs
+      socket.emit("judgeTypesError", "Error fetching judge types");
     }
   });
 
@@ -1407,12 +1569,10 @@ app.get("/api", (req, res) => {
   });
 });
 
-wifi.scan((error, networks) => {
+wifi.scan((error) => {
   if (error) {
     console.log(error);
   } else {
-    console.log("Available networks:", networks);
-
     wifi.connect({ ssid: "BBS", password: "BandaBouSplash01!" }, (error) => {
       if (error) {
         console.log(error);

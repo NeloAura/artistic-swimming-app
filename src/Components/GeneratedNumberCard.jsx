@@ -9,12 +9,13 @@ import {
   Tr,
   Th,
   Td,
-  Box
+  Box,
+  Button
 } from "@chakra-ui/react";
 // import { SunIcon } from "@chakra-ui/icons";
 import NavigationComp from "./Navigation";
-import handleDownloadExcel from "./DownloadExcel";
 import { socket } from "../socket_io";
+import { saveAs } from "file-saver";
 
 
 const fetchParticipants = () => {
@@ -42,11 +43,16 @@ const fetchParticipants = () => {
       });
     });
   };
+
+ 
+
   
   const GeneratedNumberCard = () => {
     const [participants, setParticipants] = React.useState([]);
     const [groups, setGroups] = React.useState([]);
-  
+
+
+    
     useEffect(() => {
       const fetchParticipantData = async () => {
         try {
@@ -96,6 +102,24 @@ const fetchParticipants = () => {
         return "red.200";
       }
     };
+
+    const handleExportCSV = () => {
+      // Prepare CSV data
+      let csvContent = 'data:text/csv;charset=utf-8,';
+      csvContent += 'Participant,Generated Number\n';
+      participants.forEach((participant) => {
+        csvContent += `${participant.firstName} ${participant.lastName},${participant.generatedNumber}\n`;
+      });
+      csvContent += '\nGroup,Generated Number\n';
+      groups.forEach((group) => {
+        csvContent += `${group.groupName},${group.generatedNumber}\n`;
+      });
+  
+      // Create a Blob and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+      saveAs(blob, 'generatedNumbers.csv');
+    };
+  
   
     return (
       <TableContainer>
@@ -105,7 +129,6 @@ const fetchParticipants = () => {
             <Tr>
               <Th>Participant</Th>
               <Th isNumeric>Generated Number</Th>
-              <button onClick={handleDownloadExcel} participants={participants} groups={groups} > Download </button>
             </Tr>
           </Thead>
           <Tbody>
@@ -150,6 +173,9 @@ const fetchParticipants = () => {
             ))}
           </Tbody>
         </Table>
+        <Button colorScheme="blue" onClick={handleExportCSV} mt="4" mb="4">
+        Export CSV
+      </Button>
       </TableContainer>
     );
   };

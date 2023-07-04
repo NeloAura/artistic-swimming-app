@@ -82,24 +82,27 @@ const ParticipantScoreTable = () => {
 
     setParticipantScores(updatedParticipantScores);
     setUpdatedScores(updatedParticipantScores);
+    console.log(updatedScores);
   };
 
   const handleUpdateScores = () => {
-    
-    socket.emit('update-score-value', updatedScores)
-     
-        toast({
-          title: 'Scores Updated',
-          description: 'Participant scores have been successfully updated.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-        setTimeout(() => {
-          navigate('/dashboard') 
-        }, 5000);
-      
-      }
+    const participantsData = JSON.stringify(updatedScores); // Parse the JSON string to an object
+  
+    socket.emit("update-score-value", participantsData);
+  
+    toast({
+      title: "Scores Updated",
+      description: "Participant scores have been successfully updated.",
+      status: "success",
+      duration: 5000,
+      isClosable: true,
+    });
+  
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 5000);
+  };
+  
 
   const handleExportCSV = () => {
     const csvData = participantScores.flatMap((participant) =>

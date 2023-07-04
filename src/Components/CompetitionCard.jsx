@@ -302,7 +302,7 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
                     <option value="AWD">AWD</option>
                     <option value="Novice-A">Novice-A</option>
                     <option value="Novice-B">Novice-B</option>
-                    <option value="Age Group">Age-Group</option>
+                    <option value="AgeGroup">Age-Group</option>
                   </Select>
                   <FormLabel htmlFor={`age-categorie_${CompetitionID}`}>
                     Select AgeCategorie
@@ -326,6 +326,18 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
                     <option value="Youth">AgeGroup-Youth</option>
                     <option value="Junior">AgeGroup-Junior</option>
                     <option value="Senior">AgeGroup-Senior</option>
+                    <option value="Masters25-29">
+                      AgeGroup-Masters(25-29)
+                    </option>
+                    <option value="Masters30-39">
+                      AgeGroup-Masters(30-39)
+                    </option>
+                    <option value="Masters40-49">
+                      AgeGroup-Masters(40-49)
+                    </option>
+                    <option value="Masters50-59">
+                      AgeGroup-Masters(50-59)
+                    </option>
                   </Select>
                   <FormLabel htmlFor={`type_${CompetitionID}`}>Type</FormLabel>
                   <Select
@@ -336,9 +348,9 @@ function EventForm({ isOpen, onOpen, onClose, CompetitionID, onCreate }) {
                   >
                     <option value="Solo">Solo</option>
                     <option value="Duet">Duet</option>
-                    <option value="Mix duet">Mixed duet</option>
+                    <option value="MixDuet">Mixed duet</option>
                     <option value="Team">Team</option>
-                    <option value="Male Solo">Male Solo</option>
+                    <option value="MaleSolo">Male Solo</option>
 
                   </Select>
                   <br />

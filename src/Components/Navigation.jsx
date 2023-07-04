@@ -38,6 +38,7 @@ import {
   DrawerContent,
   DrawerCloseButton,
   Spinner,
+  useToast
 } from "@chakra-ui/react";
 import {
   InfoOutlineIcon,
@@ -308,8 +309,28 @@ const countries = [
 //functions
 
 const Navigation = () => {
+
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
+  const toast = useToast();
+
+  React.useEffect(() => {
+    socket.on('score-added', (data) => {
+      // Access the new score from the received data
+      const newScore = data;
+  
+      // Display a toast with the new score
+      toast({
+        title: 'Score Added',
+        description: `Score added for ${newScore.value}`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    });
+  }, [toast]);
+
+  
   const navigateToDashboard = () => {
     navigate("/dashboard");
   };
@@ -346,11 +367,15 @@ const Navigation = () => {
     navigate("/editscore");
   };
 
+  const navigateToJudgeBoard = () => {
+    navigate("/judgeboard");
+  };
+
   const generateNumbers = () => {
     socket.emit("assign-random-numbers");
   };
 
-  // Register a new user with their username and password
+  // functions
 
   async function register(name, username, password, role) {
     try {
@@ -443,6 +468,9 @@ const Navigation = () => {
     }
   }
 
+
+  //Drawers
+
   function WalkthroughPopover(button) {
     const initialFocusRef = React.useRef();
     return (
@@ -475,10 +503,10 @@ const Navigation = () => {
             pb={4}
           >
             <ButtonGroup size="sm">
-              {ParticipantDrawer()}
-              {UserDrawer()}
-              {ClubDrawer()}
               {CompetitionDrawer()}
+              {ClubDrawer()}
+              {UserDrawer()}
+              {ParticipantDrawer()}
             </ButtonGroup>
           </PopoverFooter>
         </PopoverContent>
@@ -512,7 +540,7 @@ const Navigation = () => {
     return (
       <>
         <Button colorScheme="purple" onClick={onOpen}>
-          User{" "}
+          3 Judge/Admin
         </Button>
         <Drawer
           isOpen={isOpen}
@@ -716,7 +744,7 @@ const Navigation = () => {
     return (
       <>
         <Button colorScheme="green" onClick={onOpen}>
-          Participant
+          4 Participant
         </Button>
         <Drawer
           isOpen={isOpen}
@@ -805,7 +833,7 @@ const Navigation = () => {
                       <option value="AWD">AWD</option>
                       <option value="Novice-A">Novice-A</option>
                       <option value="Novice-B">Novice-B</option>
-                      <option value="Age Group">Age-Group</option>
+                      <option value="AgeGroup">Age-Group</option>
                     </Select>
                     <br />
                     <FormLabel htmlFor={`age-categorie`}>
@@ -828,7 +856,12 @@ const Navigation = () => {
                       <option value="10&Under">AgeGroup-10&Under</option>
                       <option value="12&Under">AgeGroup-12&Under</option>
                       <option value="Youth">AgeGroup-Youth</option>
+                      <option value="Junior">AgeGroup-Junior</option>
                       <option value="Senior">AgeGroup-Senior</option>
+                      <option value="Masters25-29">AgeGroup-Masters(25-29)</option>
+                      <option value="Masters30-39">AgeGroup-Masters(30-39)</option>
+                      <option value="Masters40-49">AgeGroup-Masters(40-49)</option>
+                      <option value="Masters50-59">AgeGroup-Masters(50-59)</option>
                     </Select>
                     <br />
                     <FormLabel htmlFor={`competition`}>
@@ -865,12 +898,12 @@ const Navigation = () => {
                         </Checkbox>
                         <Checkbox
                           colorScheme="red"
-                          value="Male Solo"
+                          value="MaleSolo"
                           id={`event5`}
                           onChange={(e) =>
                             handleChange("event", e.target.value)
                           }
-                          isChecked={formValues.event.includes("Male Solo")}
+                          isChecked={formValues.event.includes("MaleSolo")}
                         >
                           Male Solo
                         </Checkbox>
@@ -946,7 +979,7 @@ const Navigation = () => {
     return (
       <>
         <Button colorScheme="blue" onClick={onOpen}>
-          Club{" "}
+          2 Club
         </Button>
         <Drawer
           isOpen={isOpen}
@@ -1023,7 +1056,7 @@ const Navigation = () => {
     return (
       <>
         <Button colorScheme="yellow" onClick={onOpen}>
-          Competition{" "}
+         1 Competition
         </Button>
         <Drawer
           isOpen={isOpen}
@@ -1338,6 +1371,13 @@ const Navigation = () => {
                 }}
               >
                 GroupBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToJudgeBoard();
+                }}
+              >
+                JudgeBoard
               </MenuItem>
               <MenuItem
                 onClick={() => {
