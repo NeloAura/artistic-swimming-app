@@ -330,7 +330,7 @@ const Navigation = () => {
     });
   }, [toast]);
 
-  
+
   const navigateToDashboard = () => {
     navigate("/dashboard");
   };
@@ -355,8 +355,16 @@ const Navigation = () => {
     navigate("/clubboard");
   };
 
+  const navigateToClubEventScore = () => {
+    navigate("/clubeventscore");
+  };
+
   const navigateToParticipantBoard = () => {
     navigate("/participantboard");
+  };
+
+  const navigateToParticipantEventBoard = () => {
+    navigate("/participanteventboard");
   };
 
   const navigateToGroupBoard = () => {
@@ -1356,35 +1364,49 @@ const Navigation = () => {
                   navigateToClubBoard();
                 }}
               >
-                ClubBoard
+                Winning ClubBoard
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToClubEventScore();
+                }}
+              >
+                ClubEventScores
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   navigateToParticipantBoard();
                 }}
               >
-                ParticipantBoard
+                Participants Total Average
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigateToParticipantEventBoard();
+                }}
+              >
+                ParticipantEventScores
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   navigateToGroupBoard();
                 }}
               >
-                GroupBoard
+                Groups Total Average
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   navigateToJudgeBoard();
                 }}
               >
-                JudgeBoard
+                Judge Scored Participants
               </MenuItem>
               <MenuItem
                 onClick={() => {
                   navigateToParticipantScoreTable();
                 }}
               >
-                Edit Score
+                Edit Scores
               </MenuItem>
             </MenuList>
           </Menu>

@@ -15,6 +15,8 @@ import ParticipantScoreBoard from './Components/ParticipantScoreBoard'
 import GroupScoreBoard from './Components/GroupScoreBoard';
 import JudgeScoreBoard from './Components/JudgeScoreBoard';
 import ParticipantScoreTable from './Components/ParticipantScoreTable';
+import ParticipantEventScoreBoard from './Components/ParticipantEventScoreBoard';
+import ClubEventScores from './Components/ClubEventScores';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
         <Route path="/groupboard" element={<GroupScoreBoard/>} exact />
         <Route path="/editscore" element={<ParticipantScoreTable/>} exact />
         <Route path="/judgeboard" element={<JudgeScoreBoard/>} exact />
+        <Route path="/participanteventboard" element={<ParticipantEventScoreBoard/>} exact />
+        <Route path="/clubeventscore" element={<ClubEventScores/>} exact />
       </Routes>
     </div>
   );

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { ChakraProvider,Button, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import { socket } from "../socket_io";
 import Navigation from './Navigation';
-import { exportTableToCsv, exportTableToExcel } from '../exportUtils';
+
+
 
 
 // Function to calculate the average score for a participant
@@ -54,12 +55,10 @@ const ParticipantScoreBoard = () => {
   );
 
   const handleExportCsv = () => {
-    exportTableToCsv(participantScores, 'participant_scores.csv');
+    
   };
 
-  const handleExportExcel = () => {
-    exportTableToExcel(participantScores, 'participant_scores.xlsx');
-  };
+  
 
   return (
     <ChakraProvider resetCSS>
@@ -103,7 +102,6 @@ const ParticipantScoreBoard = () => {
         </Tbody>
       </Table>
       <Button onClick={handleExportCsv} mt={4} colorScheme="teal">Export as CSV</Button>
-      <Button onClick={handleExportExcel} mt={4} ml={2} colorScheme="teal">Export as Excel</Button>
     </ChakraProvider>
   );
 };

@@ -144,11 +144,13 @@ const getJudgeTypes = async (judgeId, eventId) => {
 };
 
 const secretCode = generateSecretCode();
+const eventTypes = ['Solo', 'Duet', 'MaleSolo', 'Teams', 'MixDuet'];
+
 
 io.on("connection", async (socket) => {
   //Tools
   const ipAddress = await getIpAddress();
-  console.log("A client has connected");
+  
 
   //Specials
   socket.emit("ipAddress", ipAddress);
@@ -186,7 +188,7 @@ io.on("connection", async (socket) => {
         ),
       ]);
 
-      console.log("Random numbers assigned successfully");
+      
     } catch (error) {
       console.error(error);
     }
@@ -233,7 +235,7 @@ io.on("connection", async (socket) => {
         },
       });
 
-      console.log("Judge assigned to event successfully");
+      
     } catch (error) {
       console.error("Assign event failed:", error);
     }
@@ -284,7 +286,7 @@ io.on("connection", async (socket) => {
         // Perform any other necessary operations or emit events
   
         // Return the new score or relevant information to the client
-        console.log("Score Added", newScore);
+        
         socket.emit("score-added", { score: newScore });
       } catch (error) {
         // Handle any errors that occurred during the process
@@ -299,7 +301,7 @@ io.on("connection", async (socket) => {
     async ({ judgeUsername, eventId, type, groupId, scoreData }) => {
       try {
         // Find the judge by their username
-        console.log("reached");
+        
         const judge = await prisma.user.findUnique({
           where: { username: judgeUsername },
         });
@@ -346,7 +348,7 @@ io.on("connection", async (socket) => {
           // Perform any other necessary operations or emit events
 
           // Return the new score or relevant information to the client
-          console.log("Score Added", newScore);
+          
           socket.emit("score-added-group", { score: newScore });
         }
       } catch (error) {
@@ -366,7 +368,7 @@ io.on("connection", async (socket) => {
 
       // Emit the group scores through a socket event
       socket.emit("group-scores", groups);
-      console.log(JSON.stringify(groups));
+      
       return groups;
     } catch (error) {
       console.error("Error fetching group scores:", error);
@@ -406,7 +408,7 @@ io.on("connection", async (socket) => {
       });
 
       socket.emit("club-scores", clubScores);
-      console.log(JSON.stringify(clubScores));
+      
     } catch (error) {
       console.error("Error fetching club scores:", error);
       socket.emit("error", "An error occurred while fetching club scores");
@@ -428,7 +430,7 @@ io.on("connection", async (socket) => {
                 where: { id: scoreId },
                 data: { value: newValue },
               });
-              console.log("Score value updated:", updatedScore);
+              
             } catch (error) {
               console.error("Error updating score value:", error);
             }
@@ -473,6 +475,68 @@ io.on("connection", async (socket) => {
     socket.emit("judges-participants-scores", allJudgesScores);
     
   });
+
+  socket.on('fetchParticipantsScores', async () => {
+    try {
+      // Fetch participants' scores for each event type
+      const scoresByEventType = await Promise.all(
+        eventTypes.map(async (eventType) => {
+          const scores = await prisma.score.findMany({
+            where: {
+              eventlink: {
+                type: eventType,
+              },
+            },
+            include: {
+              participants: true,
+            },
+          });
+          return { eventType, scores };
+        })
+      );
+
+      // Emit the scores to the client
+      socket.emit('participantsScores', scoresByEventType);
+      
+    } catch (error) {
+      console.error('Error fetching participants scores:', error);
+      // Handle error
+    }
+  });
+
+  socket.on('fetchParticipantsCScores', async (clubName) => {
+    try {
+
+      const parsedClubID = parseInt(clubName, 10);
+  
+      // Fetch participants' scores for each event type based on club ID
+      const scoresByEventType = await Promise.all(
+        eventTypes.map(async (eventType) => {
+          const scores = await prisma.score.findMany({
+            where: {
+              eventlink: {
+                type: eventType,
+              },
+              participants: {
+                some:{clublinkId: parsedClubID},
+              },
+            },
+            include: {
+              participants: true,
+            },
+          });
+          return { eventType, scores };
+        })
+      );
+  
+      // Emit the scores to the client
+      socket.emit('participantsCScores', scoresByEventType);
+    } catch (error) {
+      console.error('Error fetching participants scores:', error);
+      // Handle error
+    }
+  });
+  
   
   
 
@@ -543,7 +607,7 @@ io.on("connection", async (socket) => {
           data: { participants: { connect: participantIdsToConnect } },
         });
 
-        console.log("Participants added to event successfully");
+        
         socket.emit("eventParticipantsData", participants);
         
       } catch (error) {
@@ -596,7 +660,7 @@ io.on("connection", async (socket) => {
         const participants = event.participants;
         const eventType = event.types;
 
-        console.log("Fetched participants successfully");
+        
 
         // Emit the participants and eventType to the judge
         socket.emit("participantsAndTypeData", {
@@ -646,7 +710,7 @@ io.on("connection", async (socket) => {
         const groups = event.groups;
         const eventType = event.types;
 
-        console.log("Fetched groups successfully");
+        
 
         // Emit the groups and eventType to the judge
         socket.emit("groupsAndTypeData", {
@@ -994,7 +1058,7 @@ io.on("connection", async (socket) => {
           },
         });
 
-        console.log("Event created:", newEvent);
+       
       } catch (error) {
         console.error(error);
       }
@@ -1282,7 +1346,7 @@ io.on("connection", async (socket) => {
         };
       });
 
-      console.log("Fetched events successfully", events);
+      
 
       // Emit the events to the judge
       socket.emit("judgeEvents", {
@@ -1546,7 +1610,7 @@ io.on("connection", async (socket) => {
           data: participant,
         });
 
-        console.log("Participant updated:", updatedParticipant);
+       
       } catch (error) {
         console.error(error);
       }
@@ -1577,7 +1641,9 @@ wifi.scan((error) => {
       if (error) {
         console.log(error);
       } else {
+
         console.log("Connected to Wi-Fi network");
+        
 
         // Delay server startup for 20 seconds after Wi-Fi connection
         setTimeout(() => {
